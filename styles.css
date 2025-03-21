@@ -540,19 +540,20 @@
   }
   
   /* Mobile-first typography */
-  h1 {
-    font-size: 1.5rem;
-    margin: 0 0 16px 0;
+/* Mobile-first typography */
+h1 {
+    font-size: 1.3rem;
+    margin: 0 0 12px 0;
     text-align: center;
   }
   
   h2 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     margin: 0;
   }
   
   h3 {
-    font-size: 1.1rem;
+    font-size: 1rem;
     margin: 0;
   }
   
@@ -1106,21 +1107,115 @@
       display: flex;
       gap: 10px;
     }
-  }
-  /* Mobile-first typography */
-  h1 {
-    font-size: 1.3rem;
-    margin: 0 0 12px 0;
-    text-align: center;
-  }
-  
-  h2 {
-    font-size: 1.1rem;
-    margin: 0;
+    /* Add these CSS rules to your styles.css file for better small-screen support */
+
+/* Make sticky header work properly */
+.subprocess-container {
+    position: relative;
+    overflow: visible;
   }
   
-  h3 {
-    font-size: 1rem;
-    margin: 0;
+  /* Ensure the mobile view has space for the fixed action bar but no unnecessary scrolling */
+  @media (max-width: 768px) {
+    body {
+      padding-bottom: 45px;
+      overflow-x: hidden;
+    }
+    
+    /* Ensure content doesn't overflow horizontally */
+    .container {
+      overflow-x: hidden;
+      max-width: 100%;
+      padding: 8px;
+    }
+    
+    /* Make form elements more compact and touch-friendly */
+    select, 
+    input[type="text"],
+    input[type="number"] {
+      font-size: 14px !important;
+      height: 32px !important;
+      padding: 2px 5px !important;
+    }
+    
+    /* Make buttons more compact */
+    button {
+      padding: 0 8px;
+      height: 32px;
+      font-size: 13px;
+    }
+    
+    /* Improve visibility for active subprocess */
+    .active-subprocess {
+      border-left: 4px solid #10b981 !important;
+    }
+    
+    /* Ensure action bar is compact on small screens */
+    .mobile-action-bar {
+      height: 40px;
+      padding: 4px !important;
+    }
+    
+    /* Prevent overflow of subprocess cards on very small screens */
+    .subprocess-card {
+      width: calc(100% - 16px);
+      box-sizing: border-box;
+    }
+    
+    /* Improve margins and spacing */
+    .process-card {
+      margin-bottom: 10px;
+    }
+    
+    /* Create space between header and first card */
+    .section-header {
+      margin-bottom: 8px;
+    }
+  }
+  
+  /* For very small screens (iPhone SE sized and smaller) */
+  @media (max-width: 375px) {
+    /* Further reduce padding and margins */
+    .container {
+      padding: 5px;
+    }
+    
+    /* Ensure buttons are properly sized */
+    button {
+      min-width: auto;
+      padding: 0 5px;
+    }
+    
+    /* Reduce font sizes */
+    .process-name {
+      font-size: 14px !important;
+    }
+    
+    .process-timer {
+      font-size: 14px !important;
+    }
+    
+    /* Make process cards more compact */
+    .process-header {
+      padding: 5px 8px !important;
+    }
+    
+    /* Make gap between buttons smaller */
+    .process-controls,
+    .process-actions {
+      gap: 3px !important;
+    }
+    
+    /* Ensure subprocess inputs don't overflow */
+    .subprocess-inputs label {
+      font-size: 11px !important;
+    }
+    
+    /* Make delete buttons more compact */
+    .btn-small {
+      font-size: 10px !important;
+      padding: 0 2px !important;
+    }
+  }
   }
   }
