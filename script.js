@@ -653,6 +653,7 @@ const state = {
                     <option value="" ${subprocess.activityType === '' ? 'selected' : ''}>Select</option>
                     <option value="VA" ${subprocess.activityType === 'VA' ? 'selected' : ''}>VA</option>
                     <option value="NVA" ${subprocess.activityType === 'NVA' ? 'selected' : ''}>NVA</option>
+                    <option value="NVA" ${subprocess.activityType === 'RNVA' ? 'selected' : ''}>RNVA</option>
                   </select>
                 </div>
                 
@@ -753,22 +754,30 @@ const state = {
     
     mobileView.innerHTML = '';
     
-    // Processes section header
+    // Processes section header - more compact
     const processesHeader = document.createElement('div');
     processesHeader.className = 'section-header';
+    processesHeader.style.padding = '6px 10px';
+    processesHeader.style.marginBottom = '8px';
     processesHeader.innerHTML = '<h2>Processes</h2>';
     mobileView.appendChild(processesHeader);
     
-    // Render each process as a card
-    state.processes.forEach((process, processIndex) => {
-      const card = createProcessCard(process, processIndex);
+    // Render each process as a card in reverse order (most recent at the top)
+    const processesReversed = [...state.processes].reverse();
+    
+    processesReversed.forEach((process, reversedIndex) => {
+      // Calculate the original index for the function calls
+      const originalProcessIndex = state.processes.length - 1 - reversedIndex;
+      const card = createProcessCard(process, originalProcessIndex);
       mobileView.appendChild(card);
     });
     
-    // Add new process button
+    // Add new process button - more compact
     const addButton = document.createElement('button');
     addButton.className = 'add-process-button';
     addButton.textContent = '+ Add New Process';
+    addButton.style.height = '36px';
+    addButton.style.margin = '5px 0';
     addButton.onclick = () => showAddProcessModal();
     mobileView.appendChild(addButton);
     
@@ -776,7 +785,8 @@ const state = {
     if (hasRecordedTimes()) {
       const timesHeader = document.createElement('div');
       timesHeader.className = 'section-header';
-      timesHeader.style.marginTop = '20px';
+      timesHeader.style.marginTop = '10px';
+      timesHeader.style.padding = '6px 10px';
       timesHeader.innerHTML = '<h2>Recorded Times</h2>';
       mobileView.appendChild(timesHeader);
       
@@ -788,13 +798,18 @@ const state = {
   // Create a card for a process
   // Create a card for a process
 // Create a card for a process
+// Create a card for a process
+// Create a card for a process
 function createProcessCard(process, processIndex) {
     const card = document.createElement('div');
     card.className = 'process-card';
+    card.style.marginBottom = '10px';
+    card.style.position = 'relative'; // For positioning the sticky timer
     
     // Process header with name and timer
     const header = document.createElement('div');
     header.className = 'process-header';
+    header.style.padding = '8px 10px';
     header.innerHTML = `
       <div class="process-name" style="font-size: 15px;">${process.name}</div>
       <div class="process-timer" id="mobile-timer-${process.name}" style="font-size: 16px;">
@@ -806,37 +821,223 @@ function createProcessCard(process, processIndex) {
     // Process controls
     const controls = document.createElement('div');
     controls.className = 'process-controls';
+    controls.style.padding = '5px';
+    controls.style.gap = '5px';
     controls.innerHTML = `
       <button class="${process.timerRunning ? 'btn-danger' : 'btn-success'}" 
-        onclick="toggleTimer(${processIndex})">
+        onclick="toggleTimer(${processIndex})" style="height: 34px;">
         ${process.timerRunning ? 'Stop' : 'Start'}
       </button>
-      <button class="btn-secondary" onclick="resetTimer(${processIndex})">Reset</button>
-      <button class="btn-primary" onclick="showAddSubprocessModal(${processIndex})">+ Subprocess</button>
+      <button class="btn-secondary" onclick="resetTimer(${processIndex})" style="height: 34px;">Reset</button>
+      <button class="btn-primary" onclick="showAddSubprocessModal(${processIndex})" style="height: 34px;">+ Subprocess</button>
     `;
     card.appendChild(controls);
     
     // Process actions
     const actions = document.createElement('div');
     actions.className = 'process-actions';
+    actions.style.padding = '0 5px 5px';
+    actions.style.gap = '5px';
     actions.innerHTML = `
-      <button class="btn-secondary" onclick="showEditProcessModal(${processIndex})">Edit</button>
-      <button class="btn-danger" onclick="deleteProcess(${processIndex})">Delete</button>
+      <button class="btn-secondary" onclick="showEditProcessModal(${processIndex})" style="height: 34px;">Edit</button>
+      <button class="btn-danger" onclick="deleteProcess(${processIndex})" style="height: 34px;">Delete</button>
     `;
     card.appendChild(actions);
     
+    // Create a subprocess container that will hold all subprocesses
+    const subprocessContainer = document.createElement('div');
+    subprocessContainer.className = 'subprocess-container';
+    card.appendChild(subprocessContainer);
+    
     // Render subprocesses in reverse order (most recent at the top)
-    // Create a copy of the array to reverse
     const subprocessesReversed = [...process.subprocesses].reverse();
     
+    // Create a sticky timer/control bar if timer is running and there are subprocesses
+    if (process.timerRunning && process.subprocesses.length > 0) {
+      // Find the active subprocess
+      let activeSubprocessIndex = -1;
+      for (let i = process.subprocesses.length - 1; i >= 0; i--) {
+        if (!process.subprocesses[i].completed) {
+          activeSubprocessIndex = i;
+          break;
+        }
+      }
+      
+      if (activeSubprocessIndex === -1 && process.subprocesses.length > 0) {
+        activeSubprocessIndex = process.subprocesses.length - 1;
+      }
+      
+      // Find the reversed index that corresponds to the active subprocess
+      const reversedActiveIndex = process.subprocesses.length - 1 - activeSubprocessIndex;
+      const activeSubprocess = process.subprocesses[activeSubprocessIndex];
+      
+      // Create sticky timer bar
+      const stickyBar = document.createElement('div');
+      stickyBar.style.position = 'sticky';
+      stickyBar.style.top = '0';
+      stickyBar.style.backgroundColor = '#ffffff';
+      stickyBar.style.padding = '5px';
+      stickyBar.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+      stickyBar.style.zIndex = '5';
+      stickyBar.style.display = 'flex';
+      stickyBar.style.alignItems = 'center';
+      stickyBar.style.justifyContent = 'space-between';
+      stickyBar.style.borderRadius = '8px';
+      stickyBar.style.marginBottom = '5px';
+      
+      stickyBar.innerHTML = `
+        <div style="display: flex; flex-direction: column;">
+          <div style="font-weight: bold; font-size: 14px;">${activeSubprocess.name}</div>
+          <div class="process-timer" style="font-family: monospace; font-size: 16px; color: #10b981;">
+            ${process.timerRunning && state.timers[process.name] ? state.timers[process.name].lapTime : '00:00:00'}
+          </div>
+        </div>
+        <button 
+          class="btn-primary" 
+          onclick="recordLap(${processIndex}, ${activeSubprocessIndex})" 
+          style="height: 34px; padding: 0 15px;"
+        >
+          Lap
+        </button>
+      `;
+      
+      subprocessContainer.appendChild(stickyBar);
+    }
+    
+    // Add each subprocess card to the container
     subprocessesReversed.forEach((subprocess, reversedIndex) => {
       // Calculate the original index for the function calls
       const originalSubprocessIndex = process.subprocesses.length - 1 - reversedIndex;
-      card.appendChild(createSubprocessCard(process, processIndex, subprocess, originalSubprocessIndex));
+      subprocessContainer.appendChild(createSubprocessCard(process, processIndex, subprocess, originalSubprocessIndex));
     });
     
     return card;
   }
+  
+  // Create a card for a subprocess
+  function createSubprocessCard(process, processIndex, subprocess, subprocessIndex) {
+    const card = document.createElement('div');
+    card.className = 'subprocess-card';
+    card.style.margin = '4px 8px';
+    card.style.padding = '8px';
+    
+    // Find if this is the active subprocess
+    let activeSubprocessIndex = -1;
+    for (let i = process.subprocesses.length - 1; i >= 0; i--) {
+      if (!process.subprocesses[i].completed) {
+        activeSubprocessIndex = i;
+        break;
+      }
+    }
+    
+    if (activeSubprocessIndex === -1 && process.subprocesses.length > 0) {
+      activeSubprocessIndex = process.subprocesses.length - 1;
+    }
+    
+    const isActive = (subprocessIndex === activeSubprocessIndex);
+    const isButtonEnabled = process.timerRunning && isActive;
+    
+    // If this is the active subprocess, add a visual indicator
+    if (isActive) {
+      card.style.borderLeft = '4px solid #10b981';
+    }
+    
+    // Subprocess header and time (more compact)
+    const headerRow = document.createElement('div');
+    headerRow.style.display = 'flex';
+    headerRow.style.justifyContent = 'space-between';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.marginBottom = '8px';
+    headerRow.innerHTML = `
+      <div style="font-weight: bold; font-size: 14px;">${subprocess.name}</div>
+      ${subprocess.formattedTime !== '00:00:00' ? 
+        `<span style="color: #10b981; font-weight: bold; font-size: 14px;">${subprocess.formattedTime}</span>` : ''}
+    `;
+    card.appendChild(headerRow);
+    
+    // Form inputs in two columns for better space usage
+    const form = document.createElement('div');
+    form.className = 'subprocess-inputs';
+    form.style.marginBottom = '5px';
+    
+    // Create a 2-column layout for inputs
+    const inputRow = document.createElement('div');
+    inputRow.style.display = 'flex';
+    inputRow.style.gap = '5px';
+    inputRow.style.marginBottom = '5px';
+    
+    // Column 1: Activity Type
+    const column1 = document.createElement('div');
+    column1.style.flex = '1';
+    column1.innerHTML = `
+      <label for="activity-type-${processIndex}-${subprocessIndex}" style="display: block; font-size: 12px; margin-bottom: 2px;">Activity Type</label>
+      <select id="activity-type-${processIndex}-${subprocessIndex}" class="activity-type-select" style="width: 100%; height: 32px; padding: 2px 5px; font-size: 13px;">
+        <option value="" ${subprocess.activityType === '' ? 'selected' : ''}>Select</option>
+        <option value="VA" ${subprocess.activityType === 'VA' ? 'selected' : ''}>VA</option>
+        <option value="NVA" ${subprocess.activityType === 'NVA' ? 'selected' : ''}>NVA</option>
+        <option value="RNVA" ${subprocess.activityType === 'RNVA' ? 'selected' : ''}>RNVA</option>
+      </select>
+    `;
+    
+    // Column 2: Persons
+    const column2 = document.createElement('div');
+    column2.style.flex = '1';
+    column2.innerHTML = `
+      <label for="person-count-${processIndex}-${subprocessIndex}" style="display: block; font-size: 12px; margin-bottom: 2px;">Persons</label>
+      <input type="number" id="person-count-${processIndex}-${subprocessIndex}" class="person-count-input" 
+        value="${subprocess.personCount || 1}" min="1" max="100" style="width: 100%; height: 32px; padding: 2px 5px; font-size: 13px;">
+    `;
+    
+    inputRow.appendChild(column1);
+    inputRow.appendChild(column2);
+    form.appendChild(inputRow);
+    
+    // Remarks field
+    const remarksField = document.createElement('div');
+    remarksField.innerHTML = `
+      <label for="remarks-${processIndex}-${subprocessIndex}" style="display: block; font-size: 12px; margin-bottom: 2px;">Remarks</label>
+      <input type="text" id="remarks-${processIndex}-${subprocessIndex}" class="remarks-input" 
+        value="${subprocess.remarks || ''}" placeholder="Add remarks" style="width: 100%; height: 32px; padding: 2px 5px; font-size: 13px;">
+    `;
+    form.appendChild(remarksField);
+    card.appendChild(form);
+    
+    // Action buttons row
+    const actionRow = document.createElement('div');
+    actionRow.style.display = 'flex';
+    actionRow.style.gap = '4px';
+    actionRow.style.marginTop = '5px';
+    
+    // Delete buttons
+    const deleteButtons = document.createElement('div');
+    deleteButtons.style.display = 'flex';
+    deleteButtons.style.gap = '4px';
+    deleteButtons.style.flex = '2';
+    deleteButtons.innerHTML = `
+      <button class="btn-danger" onclick="deleteLastReading(${processIndex}, ${subprocessIndex})" style="flex: 1; height: 32px; font-size: 11px; padding: 0 3px;">Delete Last</button>
+      <button class="btn-danger" onclick="deleteSubprocessReadings(${processIndex}, ${subprocessIndex})" style="flex: 1; height: 32px; font-size: 11px; padding: 0 3px;">Delete All</button>
+    `;
+    actionRow.appendChild(deleteButtons);
+    
+    // Only show lap button if not in sticky header or if sticky header is not showing
+    if (!process.timerRunning || !isActive) {
+      // Lap button
+      const lapButton = document.createElement('button');
+      lapButton.className = isButtonEnabled ? 'btn-primary' : 'btn-secondary';
+      lapButton.textContent = 'Lap';
+      lapButton.style.flex = '1';
+      lapButton.style.height = '32px';
+      lapButton.style.fontSize = '13px';
+      lapButton.disabled = !isButtonEnabled;
+      lapButton.onclick = () => recordLap(processIndex, subprocessIndex);
+      actionRow.appendChild(lapButton);
+    }
+    
+    card.appendChild(actionRow);
+    
+    return card;
+  }
+  
   
   // Create a card for a subprocess
   function createSubprocessCard(process, processIndex, subprocess, subprocessIndex) {
@@ -879,6 +1080,7 @@ function createProcessCard(process, processIndex) {
         <option value="" ${subprocess.activityType === '' ? 'selected' : ''}>Select</option>
         <option value="VA" ${subprocess.activityType === 'VA' ? 'selected' : ''}>VA</option>
         <option value="NVA" ${subprocess.activityType === 'NVA' ? 'selected' : ''}>NVA</option>
+        <option value="RNVA" ${subprocess.activityType === 'RNVA' ? 'selected' : ''}>RNVA</option>
       </select>
     </div>
     
@@ -923,44 +1125,57 @@ function createProcessCard(process, processIndex) {
 }
 
 // Create a card for recorded times
+// Create a card for recorded times
 function createRecordedTimesCard() {
-  const card = document.createElement('div');
-  card.className = 'recorded-times-card';
-  
-  let html = '';
-  
-  state.processes.forEach((process, processIndex) => {
-    if (process.readings && process.readings.length > 0) {
-      process.readings.forEach((reading, idx) => {
-        html += `
-          <div style="background: white; margin-bottom: 10px; padding: 10px; border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <strong>${process.name} - ${reading.subprocess}</strong>
-              <span style="color: #10b981; font-weight: bold;">${reading.formattedTime}</span>
-            </div>
-            <div style="font-size: 14px;">
-              <div><strong>Activity:</strong> ${reading.activityType || "—"} | <strong>Persons:</strong> ${reading.personCount}</div>
-              <div><strong>Remarks:</strong> ${reading.remarks || "—"}</div>
-              <div style="color: #666; font-size: 12px; margin-top: 5px;">${new Date(reading.timestamp).toLocaleString()}</div>
-            </div>
-            <div style="text-align: right; margin-top: 5px;">
-              <button class="btn-danger btn-small" onclick="deleteReading(${processIndex}, ${idx})">
-                Delete
-              </button>
-            </div>
+    const card = document.createElement('div');
+    card.className = 'recorded-times-card';
+    
+    let html = '';
+    
+    // Get all readings from all processes and sort by timestamp (newest first)
+    const allReadings = [];
+    
+    state.processes.forEach((process, processIndex) => {
+      if (process.readings && process.readings.length > 0) {
+        process.readings.forEach((reading, idx) => {
+          allReadings.push({...reading, processIndex, readingIndex: idx});
+        });
+      }
+    });
+    
+    // Sort by timestamp, newest first
+    allReadings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    allReadings.forEach(reading => {
+      html += `
+        <div style="background: white; margin-bottom: 8px; padding: 8px; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <strong style="font-size: 14px;">${reading.process} - ${reading.subprocess}</strong>
+            <span style="color: #10b981; font-weight: bold; font-size: 14px;">${reading.formattedTime}</span>
           </div>
-        `;
-      });
+          <div style="font-size: 13px;">
+            <div><strong>Activity:</strong> ${reading.activityType || "—"} | <strong>Persons:</strong> ${reading.personCount}</div>
+            <div><strong>Remarks:</strong> ${reading.remarks || "—"}</div>
+            <div style="color: #666; font-size: 12px; margin-top: 3px;">${new Date(reading.timestamp).toLocaleString()}</div>
+          </div>
+          <div style="text-align: right; margin-top: 3px;">
+            <button class="btn-danger btn-small" onclick="deleteReading(${reading.processIndex}, ${reading.readingIndex})" 
+              style="height: 30px; font-size: 12px; padding: 0 8px;">
+              Delete
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    
+    if (html === '') {
+      html = '<div style="text-align: center; padding: 15px;">No recorded times yet</div>';
     }
-  });
-  
-  if (html === '') {
-    html = '<div style="text-align: center; padding: 20px;">No recorded times yet</div>';
+    
+    card.innerHTML = html;
+    return card;
   }
-  
-  card.innerHTML = html;
-  return card;
-}
+
 
 // Check if there are any recorded times
 function hasRecordedTimes() {
@@ -1100,14 +1315,41 @@ function updateProcessFromModal(processIndex) {
 
 // Update mobile timer displays
 function updateMobileTimerDisplays() {
-  state.processes.forEach(process => {
-    const timerDisplay = document.getElementById(`mobile-timer-${process.name}`);
-    if (timerDisplay && state.timers[process.name]) {
-      timerDisplay.textContent = state.timers[process.name].lapTime;
+    state.processes.forEach(process => {
+      // Update the main process timer
+      const timerDisplay = document.getElementById(`mobile-timer-${process.name}`);
+      if (timerDisplay && state.timers[process.name]) {
+        timerDisplay.textContent = state.timers[process.name].lapTime;
+      }
+      
+      // Find all timer displays (including sticky ones) and update them
+      const timerDisplays = document.querySelectorAll(`.process-timer[id="mobile-timer-${process.name}"], .process-timer:not([id])`);
+      timerDisplays.forEach(display => {
+        if (state.timers[process.name]) {
+          display.textContent = state.timers[process.name].lapTime;
+        }
+      });
+    });
+  }
+  function setupMobileActionBar() {
+    const mobileActionBar = document.getElementById('mobileActionBar');
+    if (mobileActionBar) {
+      mobileActionBar.style.padding = '4px';
+      mobileActionBar.style.gap = '4px';
+      
+      const mobileAddProcessBtn = document.getElementById('mobileAddProcessBtn');
+      if (mobileAddProcessBtn) {
+        mobileAddProcessBtn.style.height = '32px';
+        mobileAddProcessBtn.style.fontSize = '13px';
+      }
+      
+      const mobileExportBtn = document.getElementById('mobileExportBtn');
+      if (mobileExportBtn) {
+        mobileExportBtn.style.height = '32px';
+        mobileExportBtn.style.fontSize = '13px';
+      }
     }
-  });
-}
-
+  }
 // Show modal
 function showModal(title, content) {
   // Create or get modal
@@ -1159,6 +1401,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('Error loading saved data:', e);
     }
   }
+  setupMobileActionBar();
   
   // Setup event listeners
   if (addProcessBtn) {
