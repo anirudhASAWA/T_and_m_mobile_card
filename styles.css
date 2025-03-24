@@ -23,7 +23,11 @@
     margin-bottom: 30px;
     color: #333;
   }
-  
+  h1 {
+    margin: 0; /* Remove default margins */
+    display: inline-block; /* Makes it stay in line */
+    vertical-align: middle; /* Aligns with logo */
+  }
   .form-group {
     margin-bottom: 20px;
     display: flex;
@@ -1218,4 +1222,58 @@ h1 {
     }
   }
   }
+  /* Add these styles to your styles.css file */
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Aligns items to the start */
+  margin-bottom: 20px;
+}
+
+.company-logo {
+  width: 50px; /* Adjust size as needed */
+  height: auto;
+  margin-right: 15px;
+  vertical-align: middle; /* Helps with alignment */
+}
+
+h1 {
+  margin: 0; /* Remove default margins */
+  display: inline-block; /* Makes it stay in line */
+  vertical-align: middle; /* Aligns with logo */
+}
+
+/* For mobile devices */
+@media (max-width: 768px) {
+  .company-logo {
+    width: 40px;
+  }
+}
+
+.company-logo {
+  max-width: 80px;
+  height: auto;
+}
+
+/* For mobile devices */
+@media (max-width: 768px) {
+  .company-logo {
+    max-width: 150px;
+  }
+}
+
+/* Add this style for the production quantity input */
+.production-qty-input {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  width: 80px;
+}
   }
