@@ -871,14 +871,11 @@ const state = {
   
   function proceedWithExport(filename) {
     // Confirm with user about data deletion
-    if (!confirm('After exporting to Excel, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
+    if (!confirm('After successfully exporting to Excel, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
       return;
     }
     
     try {
-  
-      
-      
       // Final check that XLSX is available
       if (typeof XLSX === 'undefined') {
         throw new Error('XLSX library is not available. Please check your internet connection and try again.');
@@ -979,14 +976,10 @@ const state = {
             const avgTimeMs = totalTimeMs / times.length;
             const avgTimeSec = avgTimeMs / 1000;
             
-            // Calculate basic time (average time * rating percentage / 100)
-            const basicTimeSec = avgTimeSec * (data.rating / 100);
-            
-            const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
-  
+            // FIX: Correct order of calculations
             const cycleTime = avgTimeSec / data.unitsPerOccurrence;
-            // Calculate time per unit considering frequency
-            const timePerUnit = basicTimeSec / data.unitsPerOccurrence;
+            const basicTimeSec = cycleTime * (data.rating / 100);
+            const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
             
             // Format frequency as string for display
             const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
@@ -999,8 +992,8 @@ const state = {
               "Rating (%)": data.rating,
               "Basic Time (sec)": basicTimeSec.toFixed(1),
               "Frequency": frequencyStr,
-              "Effective Time (sec)": effectiveTime.toFixed(1), // New column
-              "Cycle Time (sec)": cycleTime.toFixed(1), // Renamed from "Time per Unit (sec)"
+              "Effective Time (sec)": effectiveTime.toFixed(1),
+              "Cycle Time (sec)": cycleTime.toFixed(1),
               "Production Quantity": data.productionQty
             });
           });
@@ -1020,8 +1013,8 @@ const state = {
           {wch: 12}, // Rating (%)
           {wch: 15}, // Basic Time (sec)
           {wch: 12}, // Frequency
-          {wch: 15}, // Effective Time (sec) - New column
-          {wch: 15}, // Cycle Time (sec) - Renamed column
+          {wch: 15}, // Effective Time (sec)
+          {wch: 15}, // Cycle Time (sec)
           {wch: 15}  // Production Quantity
         ];
         summaryWs['!cols'] = wsColWidth;
@@ -1030,28 +1023,85 @@ const state = {
         XLSX.utils.book_append_sheet(wb, summaryWs, 'Process Summary');
       }
       
-      // Continue with existing export code...
+      // Export the Excel file
       try {
         XLSX.writeFile(wb, filename + '.xlsx');
         console.log('Export successful using standard XLSX.writeFile');
-        // Rest of your export function remains the same
-      }
-      catch (standardError) {
-        // Your existing fallback code
+        
+        // Only clear data if export was successful
+        clearAllReadingsData();
+        
+      } catch (standardError) {
+        console.error('Standard XLSX.writeFile failed:', standardError);
+        
+        // Try alternative method for browsers that don't support writeFile
+        try {
+          const wb_out = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+          
+          function s2ab(s) {
+            const buf = new ArrayBuffer(s.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+            return buf;
+          }
+          
+          const blob = new Blob([s2ab(wb_out)], { type: 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename + '.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Only clear data if export was successful
+            clearAllReadingsData();
+            
+          }, 100);
+          
+        } catch (alternativeError) {
+          console.error('Alternative export method failed:', alternativeError);
+          throw new Error('Excel export failed. Please try CSV export instead.');
+        }
       }
       
     } catch (error) {
       console.error('Error exporting to Excel:', error);
       alert('There was an error exporting to Excel: ' + error.message);
       
-      // Your existing CSV fallback code
-      clearAllReadingsData();
+      // Data is NOT cleared if there's an error
+      
+      // Offer CSV fallback
+      if (confirm('Would you like to try exporting as CSV instead?')) {
+        showModal('Export to CSV', `
+          <div>
+            <label for="export-filename" style="display: block; margin-bottom: 8px;">Enter filename (without extension):</label>
+            <input type="text" id="export-filename" value="time_motion_study" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px;">
+              <button onclick="confirmCSVExport()" class="btn-success" style="flex: 1;">Export as CSV</button>
+              <button onclick="closeModal()" class="btn-secondary" style="flex: 1;">Cancel</button>
+            </div>
+          </div>
+        `);
+        
+        // Focus the input field
+        setTimeout(() => {
+          const input = document.getElementById('export-filename');
+          if (input) {
+            input.focus();
+            input.select();
+          }
+        }, 100);
+      }
     }
   }
   
+  
   function exportToCSV(filename) {
     // Confirm with user about data deletion
-    if (!confirm('After exporting to CSV, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
+    if (!confirm('After successfully exporting to CSV, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
       return;
     }
     
@@ -1185,14 +1235,10 @@ const state = {
             const avgTimeMs = totalTimeMs / times.length;
             const avgTimeSec = avgTimeMs / 1000;
             
-            // Calculate basic time (average time * rating percentage / 100)
-            const basicTimeSec = avgTimeSec * (data.rating / 100);
-            
-            // Calculate effective time (basic time * frequency)
-            const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
-            
-            // Calculate cycle time (formerly "time per unit")
+            // FIX: Correct order of calculations
             const cycleTime = avgTimeSec / data.unitsPerOccurrence;
+            const basicTimeSec = cycleTime * (data.rating / 100);
+            const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
             
             // Format frequency as string for display
             const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
@@ -1216,80 +1262,80 @@ const state = {
         }
       });
       
-      // Create a download link
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `${filename}.csv`);
-      document.body.appendChild(link); // Required for FF
-      
-      // Trigger download
-      link.click();
-      
-      // Clean up
-      document.body.removeChild(link);
-      
-      // Clear data after successful export
-      clearAllReadingsData();
-      
-      // Show success notification
-      showNotification("CSV export complete", 3000);
+      try {
+        // Create a download link
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `${filename}.csv`);
+        document.body.appendChild(link); // Required for FF
+        
+        // Trigger download
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        
+        // Clear data ONLY after successful export
+        clearAllReadingsData();
+        
+        // Show success notification
+        showNotification("CSV export complete", 3000);
+        
+      } catch (downloadError) {
+        console.error('Error creating download link:', downloadError);
+        throw new Error('Could not create the download link');
+      }
       
     } catch (error) {
       console.error('Error exporting to CSV:', error);
       alert('There was an error exporting to CSV: ' + error.message);
+      
+      // Do NOT clear data in case of error
     }
   }
   // Clear all readings data after export
   // Fix the clearAllReadingsData function
  // Improved clearAllReadingsData function
+// Updated clearAllReadingsData function to completely reset the application
 function clearAllReadingsData() {
-    console.log("Clearing all readings data...");
+    console.log("Clearing all data...");
     
-    // Loop through each process and clear its readings
-    state.processes.forEach(process => {
-      // Completely empty the readings array
-      process.readings = [];
-      
-      // Reset subprocess time displays
-      process.subprocesses.forEach(subprocess => {
-        subprocess.time = 0;
-        subprocess.formattedTime = '00:00:00';
-        subprocess.activityType = '';
-        subprocess.remarks = '';
-        subprocess.personCount = 1;
-        subprocess.productionQty = 0;
-        subprocess.rating = 100;
-      });
-      
-      // Also reset any active timer states
-      if (process.timerRunning) {
-        if (state.timerIntervals[process.name]) {
-          clearInterval(state.timerIntervals[process.name]);
-          delete state.timerIntervals[process.name];
-        }
-        process.timerRunning = false;
-        process.active = false;
-        process.elapsedTime = 0;
-        process.startTime = null;
-        process.lastLapTime = 0;
-      }
-    });
+    // Clear all processes from the state
+    state.processes = [];
     
-    // Clear any active timer states in the timers object
-    Object.keys(state.timers).forEach(key => {
-      delete state.timers[key];
-    });
-    
-    // Reset active state tracking
+    // Reset all state variables
+    state.timers = {};
+    state.timerIntervals = {};
+    state.editMode = false;
+    state.editProcessIndex = null;
     state.activeProcess = null;
     state.activeSubprocess = null;
+    
+    // Clear any active timer intervals
+    Object.keys(state.timerIntervals).forEach(key => {
+      clearInterval(state.timerIntervals[key]);
+      delete state.timerIntervals[key];
+    });
     
     // Force re-render of the interface
     renderInterface();
     
-    // Update localStorage
-    saveToLocalStorage();
+    // Hide tables if they're visible (desktop view)
+    if (processTableContainer) {
+      processTableContainer.style.display = 'none';
+    }
+    if (recordedTimesContainer) {
+      recordedTimesContainer.style.display = 'none';
+    }
+    
+    // Clear process input field
+    if (processInput) {
+      processInput.value = '';
+    }
+    
+    // Update localStorage - completely clear the timeMotionData item
+    localStorage.removeItem('timeMotionData');
     
     // Show notification
     showNotification("All data has been cleared after export", 3000);
