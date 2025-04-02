@@ -18,16 +18,33 @@
     padding: 20px;
   }
   
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+    overflow: hidden; /* Prevent logo overflow */
+    max-width: 100%; /* Ensure header stays within bounds */
+  }
+  
+  /* Logo styling with fixed size */
+  .company-logo {
+    width: 200px; /* Fixed width for desktop */
+    height: auto;
+    margin-right: 15px;
+    vertical-align: middle;
+    max-width: 100%; /* Prevent overflow */
+  }
+  
   h1 {
     text-align: center;
     margin-bottom: 30px;
     color: #333;
+    margin: 0;
+    display: inline-block;
+    vertical-align: middle;
   }
-  h1 {
-    margin: 0; /* Remove default margins */
-    display: inline-block; /* Makes it stay in line */
-    vertical-align: middle; /* Aligns with logo */
-  }
+  
   .form-group {
     margin-bottom: 20px;
     display: flex;
@@ -57,7 +74,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    min-height: 44px; /* Default touch-friendly size */
+    min-height: 44px;
   }
   
   .btn-primary {
@@ -78,11 +95,6 @@
     background-color: #059669;
   }
   
-  @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-  
   .btn-danger {
     background-color: #ef4444;
     color: white;
@@ -99,11 +111,6 @@
   
   .btn-secondary:hover {
     background-color: #4b5563;
-  }
-  
-  .button-active {
-    opacity: 0.8;
-    transform: scale(0.98);
   }
   
   button:disabled {
@@ -171,20 +178,6 @@
     font-weight: bold;
   }
   
-  .subprocess-confirmation {
-    color: #10b981;
-    font-weight: bold;
-    margin-top: 4px;
-    animation: fadeOut 1.5s ease-out;
-  }
-  
-  .mobile-section {
-    margin-bottom: 20px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  
   .section-header {
     display: flex;
     justify-content: space-between;
@@ -192,54 +185,6 @@
     margin-bottom: 15px;
     padding: 12px;
     background-color: #f9fafb;
-  }
-  
-  .collapsible {
-    cursor: pointer;
-    margin-bottom: 0;
-  }
-  
-  .toggle-icon {
-    font-size: 12px;
-    transition: transform 0.3s ease;
-  }
-  
-  .collapsed .toggle-icon {
-    transform: rotate(-90deg);
-  }
-  
-  .collapsed + * {
-    display: none;
-  }
-  
-  .instructions {
-    background-color: #f9fafb;
-    padding: 0;
-    border-radius: 6px;
-    margin-top: 20px;
-  }
-  
-  .instructions h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-  }
-  
-  #instructionsContent {
-    padding: 15px;
-  }
-  
-  .instructions ol {
-    margin: 0;
-    padding-left: 20px;
-  }
-  
-  .instructions li {
-    margin-bottom: 6px;
-  }
-  
-  .instructions ul {
-    margin: 4px 0;
-    padding-left: 20px;
   }
   
   .table-container {
@@ -320,6 +265,20 @@
     width: 60px;
   }
   
+  .production-qty-input {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    width: 80px;
+  }
+  
+  .rating-input {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    width: 80px;
+  }
+  
   /* Modal styles */
   .modal {
     display: none;
@@ -353,14 +312,55 @@
     color: black;
   }
   
+  /* Notification */
+  .notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #10b981;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 1000;
+    font-weight: bold;
+  }
+  
+  .notification.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
   /* Mobile-specific styles */
   @media (max-width: 768px) {
+    /* Fixed logo size for mobile */
+    .company-logo {
+      width: 120px; /* Larger size for mobile */
+    }
+    
+    .header-container {
+      justify-content: center; /* Center the header on mobile */
+      flex-wrap: wrap;
+    }
+    
+    body {
+      padding-bottom: 70px; /* Space for action bar */
+    }
+    
     .container {
       padding: 10px;
       margin: 0;
       width: 100%;
       max-width: 100%;
       border-radius: 0;
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
     }
     
     .form-group {
@@ -373,33 +373,30 @@
       margin-bottom: 10px;
     }
     
-    .button-group {
-      width: 100%;
-    }
-    
-    .button-group button {
-      flex: 1;
-    }
-    
-    table {
-      font-size: 14px;
-    }
-    
-    th, td {
-      padding: 8px 4px;
-    }
-    
-    .timer-display {
-      font-size: 20px;
-    }
-    
     button {
       padding: 12px 16px;
-      min-height: 48px; /* Touch-friendly size */
+      min-height: 48px;
     }
     
-    .subprocess-inputs {
-      width: 100%;
+    .desktop-only {
+      display: none !important;
+    }
+    
+    .mobile-view {
+      display: block;
+    }
+    
+    .mobile-action-bar {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      padding: 10px;
+      z-index: 100;
+      gap: 10px;
     }
     
     .input-group {
@@ -415,33 +412,18 @@
     
     .activity-type-select, 
     .remarks-input, 
-    .person-count-input {
+    .person-count-input,
+    .production-qty-input,
+    .rating-input {
       width: 100%;
       padding: 10px;
       margin-bottom: 8px;
     }
     
-    .mobile-collapse {
-      display: none;
-    }
-    
-    .recorded-times-row {
-      cursor: pointer;
-    }
-    
-    .details-popup {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      padding: 20px;
-      border-top-left-radius: 15px;
-      border-top-right-radius: 15px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      z-index: 1000;
-      max-height: 80vh;
-      overflow-y: auto;
+    .notification {
+      left: 20px;
+      right: 20px;
+      text-align: center;
     }
     
     .modal-content {
@@ -449,454 +431,59 @@
       margin: 10% auto;
       padding: 15px;
     }
+    
     .delete-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
+      flex-direction: row;
+    }
+    
+    .delete-buttons button {
+      padding: 6px 8px;
+      font-size: 11px;
+    }
+    
+    /* Optimizations for very small screens */
+    @media (max-width: 375px) {
+      .container {
         padding: 5px;
       }
       
-      .delete-buttons button {
-        white-space: nowrap;
-        width: 100%;
+      button {
+        min-width: auto;
+        padding: 0 5px;
+      }
+      
+      .process-name {
+        font-size: 14px !important;
+      }
+      
+      .process-timer {
+        font-size: 14px !important;
+      }
+      
+      .process-header {
+        padding: 5px 8px !important;
+      }
+      
+      .process-controls,
+      .process-actions {
+        gap: 3px !important;
+      }
+      
+      .subprocess-inputs label {
+        font-size: 11px !important;
       }
       
       .btn-small {
-        padding: 5px 8px;
-        font-size: 12px;
-        min-height: 30px;
+        font-size: 10px !important;
+        padding: 0 2px !important;
       }
-      
-      /* Mobile-specific styles */
-      @media (max-width: 768px) {
-        .delete-buttons {
-          flex-direction: row;
-        }
-        
-        .delete-buttons button {
-          padding: 6px 8px;
-          font-size: 11px;
-        }
-      }
-      .notification {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: #10b981;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transform: translateY(100px);
-        opacity: 0;
-        transition: transform 0.3s, opacity 0.3s;
-        z-index: 1000;
-        font-weight: bold;
-      }
-      
-      .notification.show {
-        transform: translateY(0);
-        opacity: 1;
-      }
-      
-      @media (max-width: 768px) {
-        .notification {
-          left: 20px;
-          right: 20px;
-          text-align: center;
-        }
-      }
-      /* Mobile optimization for Time and Motion Study app */
-
-/* Root variables for consistent sizing */
-:root {
-    --mobile-padding: 8px;
-    --button-height: 44px;
-    --input-height: 44px;
-    --border-radius: 6px;
-    --primary-color: #3b82f6;
-    --success-color: #10b981;
-    --danger-color: #ef4444;
-    --secondary-color: #6b7280;
-    --shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
-  
-  /* Base styles optimized for mobile first */
-  * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-    margin: 0;
-    padding: 0;
-    font-size: 16px;
-    line-height: 1.5;
-    color: #333;
-    background-color: #f8f9fa;
-    padding-bottom: 70px; /* Space for fixed action bar */
-  }
-  
-  .container {
-    padding: 12px;
-    max-width: 100%;
-  }
-  
-  /* Mobile-first typography */
-/* Mobile-first typography */
-h1 {
-    font-size: 1.3rem;
-    margin: 0 0 12px 0;
-    text-align: center;
-  }
-  
-  h2 {
-    font-size: 1.1rem;
-    margin: 0;
-  }
-  
-  h3 {
-    font-size: 1rem;
-    margin: 0;
-  }
-  
-  /* Form elements optimized for touch */
-  input[type="text"],
-  input[type="number"],
-  select,
-  textarea {
-    width: 100%;
-    height: var(--input-height);
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: var(--border-radius);
-    font-size: 16px; /* Prevents iOS zoom */
-    margin-bottom: 10px;
-  }
-  
-  /* Better button sizing for touch targets */
-  button {
-    height: var(--button-height);
-    min-width: 80px;
-    border: none;
-    border-radius: var(--border-radius);
-    font-weight: 500;
-    font-size: 15px;
-    cursor: pointer;
-    padding: 0 16px;
-    box-shadow: var(--shadow);
-    transition: background-color 0.2s, transform 0.1s;
-  }
-  
-  button:active {
-    transform: scale(0.97);
-  }
-  
-  /* Button types */
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-  
-  .btn-success {
-    background-color: var(--success-color);
-    color: white;
-  }
-  
-  .btn-danger {
-    background-color: var(--danger-color);
-    color: white;
-  }
-  
-  .btn-secondary {
-    background-color: var(--secondary-color);
-    color: white;
-  }
-  
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  /* Small button variant */
-  .btn-small {
-    height: 36px;
-    min-width: 60px;
-    font-size: 13px;
-    padding: 0 10px;
-  }
-  
-  /* Card styling for better visual separation */
-  .card {
-    background: white;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
-    box-shadow: var(--shadow);
-  }
-  
-  /* Mobile-optimized process card */
-  .process-card {
-    margin-bottom: 16px;
-  }
-  
-  .process-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  
-  .process-name {
-    font-weight: bold;
-    font-size: 16px;
-  }
-  
-  .process-timer {
-    font-family: monospace;
-    font-size: 20px;
-    background: #f2f2f2;
-    padding: 4px 8px;
-    border-radius: 4px;
-  }
-  
-  .process-controls {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  
-  /* Subprocess styling */
-  .subprocess-card {
-    background: #f9f9f9;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-  }
-  
-  .subprocess-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-  
-  .subprocess-name {
-    font-weight: 500;
-  }
-  
-  .subprocess-time {
-    font-family: monospace;
-    font-weight: 500;
-    color: var(--success-color);
-  }
-  
-  .subprocess-inputs {
-    margin-bottom: 10px;
-  }
-  
-  .subprocess-actions {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .delete-buttons {
-    display: flex;
-    gap: 8px;
-  }
-  
-  /* Mobile-optimized table */
-  .table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-bottom: 16px;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  
-  th, td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-  }
-  
-  th {
-    background-color: #f9f9fa;
-    font-weight: 600;
-  }
-  
-  /* Collapsible sections */
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    background-color: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    margin-bottom: 10px;
-    cursor: pointer;
-  }
-  
-  .section-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s;
-  }
-  
-  .section-expanded .section-content {
-    max-height: 5000px;
-  }
-  
-  .toggle-icon {
-    font-size: 14px;
-    transition: transform 0.3s;
-  }
-  
-  .section-expanded .toggle-icon {
-    transform: rotate(180deg);
-  }
-  
-  /* Fixed bottom action bar */
-  .mobile-action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    display: flex;
-    padding: 10px;
-    gap: 8px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    z-index: 100;
-  }
-  
-  .mobile-action-bar button {
-    flex: 1;
-  }
-  
-  /* Toast notifications */
-  .notification {
-    position: fixed;
-    bottom: 70px;
-    left: 10px;
-    right: 10px;
-    background: var(--success-color);
-    color: white;
-    padding: 12px 16px;
-    border-radius: var(--border-radius);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    transform: translateY(100px);
-    opacity: 0;
-    transition: transform 0.3s, opacity 0.3s;
-    z-index: 110;
-    text-align: center;
-    font-weight: 500;
-  }
-  
-  .notification.show {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  
-  /* Show more compact subprocess form on mobile */
-  .compact-form label {
-    display: block;
-    margin-bottom: 4px;
-    font-weight: 500;
-    font-size: 14px;
-  }
-  
-  .compact-form .input-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  
-  .compact-form .input-row > div {
-    flex: 1;
-  }
-  
-  /* Standard media query for non-mobile devices */
-  @media (min-width: 768px) {
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
     }
-    
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 24px;
-    }
-    
-    .mobile-action-bar {
-      display: none;
-    }
-    
-    body {
-      padding-bottom: 0;
-    }
-    
-    .card-layout {
-      display: none;
-    }
-    
-    .table-layout {
-      display: block;
-    }
-    
-    .section-content {
-      max-height: none;
-      overflow: visible;
-    }
-    
-    .section-header {
-      cursor: default;
-    }
-    
-    .toggle-icon {
-      display: none;
-    }
-  }
-  
-  /* Hide desktop elements on mobile */
-  @media (max-width: 767px) {
-    .table-layout {
-      display: none;
-    }
-    
-    .desktop-only {
-      display: none;
-    }
-    
-    .card-layout {
-      display: block;
-    }
-  }
-  
-:root {
-    --primary-color: #3b82f6;
-    --success-color: #10b981;
-    --danger-color: #ef4444;
-    --secondary-color: #6b7280;
-    --light-bg: #f8f9fa;
-    --border-radius: 8px;
-  }
-  
-  /* Mobile view styles */
-  .mobile-view {
-    display: none;
   }
   
   /* Process cards */
   .process-card {
     background-color: white;
-    border-radius: var(--border-radius);
+    border-radius: 8px;
     margin-bottom: 16px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -927,11 +514,6 @@ h1 {
     gap: 8px;
   }
   
-  .process-controls button {
-    flex: 1;
-    height: 44px;
-  }
-  
   .process-actions {
     display: flex;
     padding: 0 10px 10px;
@@ -942,7 +524,7 @@ h1 {
   .subprocess-card {
     background-color: #e6f7ef;
     margin: 10px;
-    border-radius: var(--border-radius);
+    border-radius: 8px;
     padding: 15px;
     margin-bottom: 10px;
   }
@@ -953,129 +535,12 @@ h1 {
     font-size: 16px;
   }
   
-  .input-group {
-    margin-bottom: 15px;
-  }
-  
-  .input-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-  }
-  
-  .input-group select,
-  .input-group input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    height: 44px;
-  }
-  
-  .subprocess-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 15px;
-  }
-  
-  .delete-buttons {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  
-  .delete-buttons button {
-    flex: 1;
-    height: 44px;
-  }
-  
-  .lap-button {
-    height: 44px;
-    background-color: var(--secondary-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-  }
-  
-  .lap-button:disabled {
-    opacity: 0.5;
-  }
-  
-  /* Mobile action bar */
-  .mobile-action-bar {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-    padding: 10px;
-    z-index: 100;
-  }
-  
-  .mobile-action-bar button {
-    flex: 1;
-    height: 44px;
-  }
-  
-  /* Modal */
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 200;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-  }
-  
-  .modal-content {
-    background-color: white;
-    margin: 20% auto;
-    padding: 20px;
-    border-radius: var(--border-radius);
-    width: 90%;
-    max-width: 500px;
-    position: relative;
-  }
-  
-  .close-button {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  /* Notification */
-  .notification {
-    position: fixed;
-    bottom: 70px;
-    left: 20px;
-    right: 20px;
-    background-color: var(--success-color);
-    color: white;
-    padding: 15px;
-    border-radius: var(--border-radius);
-    text-align: center;
-    font-weight: bold;
-    z-index: 150;
-    display: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  }
-  
-  /* Add button */
+  /* Add Process Button */
   .add-process-button {
-    background-color: var(--primary-color);
+    background-color: #3b82f6;
     color: white;
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: 8px;
     padding: 15px;
     width: 100%;
     font-size: 16px;
@@ -1084,196 +549,19 @@ h1 {
     height: 50px;
   }
   
-  /* Media query for mobile */
-  @media (max-width: 768px) {
-    body {
-      padding-bottom: 70px; /* Space for action bar */
-    }
-    
-    .container {
-      padding: 10px;
-    }
-    
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 15px;
-    }
-    
-    .desktop-only {
-      display: none !important;
-    }
-    
-    .mobile-view {
-      display: block;
-    }
-    
-    .mobile-action-bar {
-      display: flex;
-      gap: 10px;
-    }
-    /* Add these CSS rules to your styles.css file for better small-screen support */
-
-/* Make sticky header work properly */
-.subprocess-container {
-    position: relative;
-    overflow: visible;
+  .delete-buttons {
+    display: flex;
+    gap: 5px;
+    padding: 5px;
   }
   
-  /* Ensure the mobile view has space for the fixed action bar but no unnecessary scrolling */
-  @media (max-width: 768px) {
-    body {
-      padding-bottom: 45px;
-      overflow-x: hidden;
-    }
-    
-    /* Ensure content doesn't overflow horizontally */
-    .container {
-      overflow-x: hidden;
-      max-width: 100%;
-      padding: 8px;
-    }
-    
-    /* Make form elements more compact and touch-friendly */
-    select, 
-    input[type="text"],
-    input[type="number"] {
-      font-size: 14px !important;
-      height: 32px !important;
-      padding: 2px 5px !important;
-    }
-    
-    /* Make buttons more compact */
-    button {
-      padding: 0 8px;
-      height: 32px;
-      font-size: 13px;
-    }
-    
-    /* Improve visibility for active subprocess */
-    .active-subprocess {
-      border-left: 4px solid #10b981 !important;
-    }
-    
-    /* Ensure action bar is compact on small screens */
-    .mobile-action-bar {
-      height: 40px;
-      padding: 4px !important;
-    }
-    
-    /* Prevent overflow of subprocess cards on very small screens */
-    .subprocess-card {
-      width: calc(100% - 16px);
-      box-sizing: border-box;
-    }
-    
-    /* Improve margins and spacing */
-    .process-card {
-      margin-bottom: 10px;
-    }
-    
-    /* Create space between header and first card */
-    .section-header {
-      margin-bottom: 8px;
-    }
+  .delete-buttons button {
+    white-space: nowrap;
+    width: 100%;
   }
   
-  /* For very small screens (iPhone SE sized and smaller) */
-  @media (max-width: 375px) {
-    /* Further reduce padding and margins */
-    .container {
-      padding: 5px;
-    }
-    
-    /* Ensure buttons are properly sized */
-    button {
-      min-width: auto;
-      padding: 0 5px;
-    }
-    
-    /* Reduce font sizes */
-    .process-name {
-      font-size: 14px !important;
-    }
-    
-    .process-timer {
-      font-size: 14px !important;
-    }
-    
-    /* Make process cards more compact */
-    .process-header {
-      padding: 5px 8px !important;
-    }
-    
-    /* Make gap between buttons smaller */
-    .process-controls,
-    .process-actions {
-      gap: 3px !important;
-    }
-    
-    /* Ensure subprocess inputs don't overflow */
-    .subprocess-inputs label {
-      font-size: 11px !important;
-    }
-    
-    /* Make delete buttons more compact */
-    .btn-small {
-      font-size: 10px !important;
-      padding: 0 2px !important;
-    }
-  }
-  }
-  /* Add these styles to your styles.css file */
-
-.logo-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 15px;
-}
-
-.header-container {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start; /* Aligns items to the start */
-  margin-bottom: 20px;
-}
-
-.company-logo {
-  width: 50px; /* Adjust size as needed */
-  height: auto;
-  margin-right: 15px;
-  vertical-align: middle; /* Helps with alignment */
-}
-
-h1 {
-  margin: 0; /* Remove default margins */
-  display: inline-block; /* Makes it stay in line */
-  vertical-align: middle; /* Aligns with logo */
-}
-
-/* For mobile devices */
-@media (max-width: 768px) {
-  .company-logo {
-    width: 40px;
-  }
-}
-
-.company-logo {
-  max-width: 80px;
-  height: auto;
-}
-
-/* For mobile devices */
-@media (max-width: 768px) {
-  .company-logo {
-    max-width: 150px;
-  }
-}
-
-/* Add this style for the production quantity input */
-.production-qty-input {
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  width: 80px;
-}
+  .btn-small {
+    padding: 5px 8px;
+    font-size: 12px;
+    min-height: 30px;
   }
