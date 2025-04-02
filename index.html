@@ -11,7 +11,7 @@
 <body>
   <div class="container">
     <div class="header-container">
-      <img src="Faber LOGO.jpg" alt="Faber Logo" class="company-logo">
+      <img src="Faber logo (4).png" alt="Faber Logo" class="company-logo">
     </div>
     <h1>Time and Motion Study</h1>
     <!-- Add Process Form (desktop only) -->
@@ -52,31 +52,33 @@
     </div>
     
     <!-- Recorded Times (desktop view) -->
-    <div id="recordedTimesContainer" class="desktop-only" style="display: none;">
-      <div class="section-header">
-        <h2>Recorded Times</h2>
-      </div>
-      <div class="recorded-times">
-        <table id="recordedTimesTable">
-          <thead>
-            <tr>
-              <th>Process</th>
-              <th>Subprocess</th>
-              <th>Time</th>
-              <th>Activity Type</th>
-              <th>Persons</th>
-              <th>Remarks</th>
-              <th>Start Time</th>
-              <th>End Time</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody id="recordedTimesTableBody">
-            <!-- Recorded times will be added here -->
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- Recorded Times (desktop view) -->
+<div id="recordedTimesContainer" class="desktop-only" style="display: none;">
+  <div class="section-header">
+    <h2>Recorded Times</h2>
+  </div>
+  <div class="recorded-times">
+    <table id="recordedTimesTable">
+      <thead>
+        <tr>
+          <th>Process</th>
+          <th>Subprocess</th>
+          <th>Time</th>
+          <th>Activity Type</th>
+          <th>Persons</th>
+          <th>Remarks</th>
+          <th>Rating (%)</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="recordedTimesTableBody">
+        <!-- Recorded times will be added here -->
+      </tbody>
+    </table>
+  </div>
+</div>
     
     <!-- Mobile Card Layout - Will be populated by JS -->
     <div id="mobileView" class="mobile-view"></div>
