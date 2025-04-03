@@ -868,432 +868,554 @@ const state = {
     
     return allFrequencies;
   }
+
+  // This function should be updated in the proceedWithExport function where summary calculations are performed
+
+function calculateSummaryData(processes) {
+  const summaryData = [];
   
-  function proceedWithExport(filename) {
-    // Confirm with user about data deletion
-    if (!confirm('After successfully exporting to Excel, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
-      return;
-    }
-    
-    try {
-      // Final check that XLSX is available
-      if (typeof XLSX === 'undefined') {
-        throw new Error('XLSX library is not available. Please check your internet connection and try again.');
-      }
+  processes.forEach(process => {
+    if (process.readings && process.readings.length > 0) {
+      // Get frequencies for this process
+      const processFrequencies = allFrequencies[process.name] || {};
       
-      // Calculate frequencies for all processes and their subprocesses
-      const allFrequencies = calculateFrequencies(state.processes);
+      // Group readings by subprocess
+      const subprocessMap = {};
       
-      // Create a new workbook
-      const wb = XLSX.utils.book_new();
-      
-      // --- SHEET 1: Detailed Readings ---
-      const allReadings = [];
-      
-      state.processes.forEach(process => {
-        if (process.readings && process.readings.length > 0) {
-          process.readings.forEach(reading => {
-            // Find the subprocess
-            const subprocess = process.subprocesses.find(sub => sub.name === reading.subprocess);
-            const rating = subprocess ? subprocess.rating || 100 : 100;
-            
-            // Get frequency for this subprocess
-            const processFrequencies = allFrequencies[process.name] || {};
-            const frequency = processFrequencies[reading.subprocess] || { occurrences: 1, units: 1 };
-            
-            allReadings.push({
-              "Process": process.name,
-              "Subprocess": reading.subprocess,
-              "Activity Type": reading.activityType || "",
-              "Persons Required": reading.personCount || 1,
-              "Production Quantity": reading.productionQty || 0,
-              "Rating (%)": rating,
-              "Remarks": reading.remarks || "",
-              "Start Time": reading.formattedStartTime || "",
-              "End Time": reading.formattedEndTime || ""
-            });
-          });
+      process.readings.forEach(reading => {
+        const subprocessName = reading.subprocess;
+        
+        if (!subprocessMap[subprocessName]) {
+          // Find the subprocess
+          const subprocess = process.subprocesses.find(sub => sub.name === subprocessName);
+          
+          // Get frequency for this subprocess
+          const frequency = processFrequencies[subprocessName] || { occurrences: 1, units: 1 };
+          
+          subprocessMap[subprocessName] = {
+            times: [],
+            activityType: reading.activityType || "",
+            productionQty: reading.productionQty || 1, // Default to 1 to avoid division by zero
+            rating: subprocess ? subprocess.rating || 100 : 100,
+            occurrencesPerCycle: frequency.occurrences,
+            unitsPerOccurrence: frequency.units,
+            readings: []
+          };
         }
+        
+        // Store times for average calculation
+        // Convert to seconds directly by dividing by 1000 and rounding
+        const timeInSeconds = Math.round(reading.time / 1000);
+        subprocessMap[subprocessName].times.push(timeInSeconds);
+        
+        // Keep reference to all readings for this subprocess
+        subprocessMap[subprocessName].readings.push(reading);
+        
+        // Update activity type if it was blank but now has a value
+        if (!subprocessMap[subprocessName].activityType && reading.activityType) {
+          subprocessMap[subprocessName].activityType = reading.activityType;
+        }
+        
+        // Always use the most recent production quantity
+        subprocessMap[subprocessName].productionQty = reading.productionQty || 1;
       });
       
-      // Convert detailed data to worksheet
-      const detailedWs = XLSX.utils.json_to_sheet(allReadings);
-      
-      // Add detailed worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, detailedWs, 'Detailed Readings');
-      
-      // --- SHEET 2: Summary with Averages and Cycle Time ---
-      const summaryData = [];
-      
-      state.processes.forEach(process => {
-        if (process.readings && process.readings.length > 0) {
-          // Get frequencies for this process
-          const processFrequencies = allFrequencies[process.name] || {};
-          
-          // Group readings by subprocess
-          const subprocessMap = {};
-          
-          process.readings.forEach(reading => {
-            const subprocessName = reading.subprocess;
-            
-            if (!subprocessMap[subprocessName]) {
-              // Find the subprocess
-              const subprocess = process.subprocesses.find(sub => sub.name === subprocessName);
-              
-              // Get frequency for this subprocess
-              const frequency = processFrequencies[subprocessName] || { occurrences: 1, units: 1 };
-              
-              subprocessMap[subprocessName] = {
-                times: [],
-                activityType: reading.activityType || "",
-                productionQty: reading.productionQty || 0,
-                rating: subprocess ? subprocess.rating || 100 : 100,
-                occurrencesPerCycle: frequency.occurrences,
-                unitsPerOccurrence: frequency.units,
-                readings: []
-              };
-            }
-            
-            // Store times for average calculation
-            subprocessMap[subprocessName].times.push(reading.time || 0);
-            
-            // Keep reference to all readings for this subprocess
-            subprocessMap[subprocessName].readings.push(reading);
-            
-            // Update activity type if it was blank but now has a value
-            if (!subprocessMap[subprocessName].activityType && reading.activityType) {
-              subprocessMap[subprocessName].activityType = reading.activityType;
-            }
-          });
-          
-          // Calculate values for each subprocess
-          Object.keys(subprocessMap).forEach(subprocessName => {
-            const data = subprocessMap[subprocessName];
-            const times = data.times;
-            
-            // Calculate average time in seconds
-            const totalTimeMs = times.reduce((sum, time) => sum + time, 0);
-            const avgTimeMs = totalTimeMs / times.length;
-            const avgTimeSec = avgTimeMs / 1000;
-            
-            // FIX: Correct order of calculations
-            const cycleTime = avgTimeSec / data.unitsPerOccurrence;
-            const basicTimeSec = cycleTime * (data.rating / 100);
-            const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
-            
-            // Format frequency as string for display
-            const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
-            
-            summaryData.push({
-              "Process": process.name,
-              "Subprocess": subprocessName,
-              "Activity Type": data.activityType,
-              "Average Time (sec)": avgTimeSec.toFixed(1),
-              "Rating (%)": data.rating,
-              "Basic Time (sec)": basicTimeSec.toFixed(1),
-              "Frequency": frequencyStr,
-              "Effective Time (sec)": effectiveTime.toFixed(1),
-              "Cycle Time (sec)": cycleTime.toFixed(1),
-              "Production Quantity": data.productionQty
-            });
-          });
-        }
+      // Calculate values for each subprocess
+      Object.keys(subprocessMap).forEach(subprocessName => {
+        const data = subprocessMap[subprocessName];
+        const times = data.times;
+        
+        // Calculate average time in seconds directly (no milliseconds)
+        const totalTimeSec = times.reduce((sum, time) => sum + time, 0);
+        const avgTimeSec = times.length > 0 ? totalTimeSec / times.length : 0;
+        
+        // UPDATED FORMULAS:
+        // 1. Cycle Time = Average Time / Production Quantity
+        const productionQty = Math.max(data.productionQty, 1); // Ensure we don't divide by zero
+        const cycleTime = avgTimeSec / productionQty;
+        
+        // 2. Basic Time = Cycle Time * (Rating / 100)
+        const basicTimeSec = cycleTime * (data.rating / 100);
+        
+        // 3. Effective Time = Basic Time * (Occurrences / Units)
+        const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
+        
+        // Format frequency as string for display
+        const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
+        
+        summaryData.push({
+          "Process": process.name,
+          "Subprocess": subprocessName,
+          "Activity Type": data.activityType,
+          "Average Time (sec)": avgTimeSec.toFixed(1),
+          "Rating (%)": data.rating,
+          "Basic Time (sec)": basicTimeSec.toFixed(1),
+          "Frequency": frequencyStr,
+          "Effective Time (sec)": effectiveTime.toFixed(1),
+          "Cycle Time (sec)": cycleTime.toFixed(1),
+          "Production Quantity": data.productionQty
+        });
       });
-      
-      // If summary data exists, create and add the summary worksheet
-      if (summaryData.length > 0) {
-        const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-        
-        // Customize the column widths in summary sheet (for better readability)
-        const wsColWidth = [
-          {wch: 15}, // Process
-          {wch: 20}, // Subprocess
-          {wch: 12}, // Activity Type
-          {wch: 15}, // Average Time (sec)
-          {wch: 12}, // Rating (%)
-          {wch: 15}, // Basic Time (sec)
-          {wch: 12}, // Frequency
-          {wch: 15}, // Effective Time (sec)
-          {wch: 15}, // Cycle Time (sec)
-          {wch: 15}  // Production Quantity
-        ];
-        summaryWs['!cols'] = wsColWidth;
-        
-        // Add to workbook as "Process Summary"
-        XLSX.utils.book_append_sheet(wb, summaryWs, 'Process Summary');
-      }
-      
-      // Export the Excel file
-      try {
-        XLSX.writeFile(wb, filename + '.xlsx');
-        console.log('Export successful using standard XLSX.writeFile');
-        
-        // Only clear data if export was successful
-        clearAllReadingsData();
-        
-      } catch (standardError) {
-        console.error('Standard XLSX.writeFile failed:', standardError);
-        
-        // Try alternative method for browsers that don't support writeFile
-        try {
-          const wb_out = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-          
-          function s2ab(s) {
-            const buf = new ArrayBuffer(s.length);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-            return buf;
-          }
-          
-          const blob = new Blob([s2ab(wb_out)], { type: 'application/octet-stream' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename + '.xlsx';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            // Only clear data if export was successful
-            clearAllReadingsData();
-            
-          }, 100);
-          
-        } catch (alternativeError) {
-          console.error('Alternative export method failed:', alternativeError);
-          throw new Error('Excel export failed. Please try CSV export instead.');
-        }
-      }
-      
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      alert('There was an error exporting to Excel: ' + error.message);
-      
-      // Data is NOT cleared if there's an error
-      
-      // Offer CSV fallback
-      if (confirm('Would you like to try exporting as CSV instead?')) {
-        showModal('Export to CSV', `
-          <div>
-            <label for="export-filename" style="display: block; margin-bottom: 8px;">Enter filename (without extension):</label>
-            <input type="text" id="export-filename" value="time_motion_study" style="width: 100%; padding: 10px; margin-bottom: 15px;">
-            <div style="display: flex; gap: 10px;">
-              <button onclick="confirmCSVExport()" class="btn-success" style="flex: 1;">Export as CSV</button>
-              <button onclick="closeModal()" class="btn-secondary" style="flex: 1;">Cancel</button>
-            </div>
-          </div>
-        `);
-        
-        // Focus the input field
-        setTimeout(() => {
-          const input = document.getElementById('export-filename');
-          if (input) {
-            input.focus();
-            input.select();
-          }
-        }, 100);
-      }
     }
+  });
+  
+  return summaryData;
+}
+  
+ function proceedWithExport(filename) {
+  // Confirm with user about data deletion
+  if (!confirm('After successfully exporting to Excel, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
+    return;
   }
   
+  try {
+    // Final check that XLSX is available
+    if (typeof XLSX === 'undefined') {
+      throw new Error('XLSX library is not available. Please check your internet connection and try again.');
+    }
+    
+    // Calculate frequencies for all processes and their subprocesses
+    const allFrequencies = calculateFrequencies(state.processes);
+    
+    // Create a new workbook
+    const wb = XLSX.utils.book_new();
+    
+    // --- SHEET 1: Detailed Readings ---
+    const allReadings = [];
+    
+    state.processes.forEach(process => {
+      if (process.readings && process.readings.length > 0) {
+        process.readings.forEach(reading => {
+          // Find the subprocess
+          const subprocess = process.subprocesses.find(sub => sub.name === reading.subprocess);
+          const rating = subprocess ? subprocess.rating || 100 : 100;
+          
+          // Get frequency for this subprocess
+          const processFrequencies = allFrequencies[process.name] || {};
+          const frequency = processFrequencies[reading.subprocess] || { occurrences: 1, units: 1 };
+          
+          // Convert time to seconds for display
+          const timeInSeconds = Math.round(reading.time / 1000);
+          const formattedTimeInSeconds = `${timeInSeconds}s`;
+          
+          allReadings.push({
+            "Process": process.name,
+            "Subprocess": reading.subprocess,
+            "Activity Type": reading.activityType || "",
+            "Persons Required": reading.personCount || 1,
+            "Production Quantity": reading.productionQty || 0,
+            "Rating (%)": rating,
+            "Time (seconds)": timeInSeconds,
+            "Remarks": reading.remarks || "",
+            "Start Time": reading.formattedStartTime || "",
+            "End Time": reading.formattedEndTime || ""
+          });
+        });
+      }
+    });
+    
+    // Convert detailed data to worksheet
+    const detailedWs = XLSX.utils.json_to_sheet(allReadings);
+    
+    // Add detailed worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, detailedWs, 'Detailed Readings');
+    
+    // --- SHEET 2: Summary with Averages and Cycle Time ---
+    const summaryData = [];
+    
+    state.processes.forEach(process => {
+      if (process.readings && process.readings.length > 0) {
+        // Get frequencies for this process
+        const processFrequencies = allFrequencies[process.name] || {};
+        
+        // Group readings by subprocess
+        const subprocessMap = {};
+        
+        process.readings.forEach(reading => {
+          const subprocessName = reading.subprocess;
+          
+          if (!subprocessMap[subprocessName]) {
+            // Find the subprocess
+            const subprocess = process.subprocesses.find(sub => sub.name === subprocessName);
+            
+            // Get frequency for this subprocess
+            const frequency = processFrequencies[subprocessName] || { occurrences: 1, units: 1 };
+            
+            subprocessMap[subprocessName] = {
+              times: [],
+              activityType: reading.activityType || "",
+              productionQty: reading.productionQty || 1, // Default to 1 to avoid division by zero
+              rating: subprocess ? subprocess.rating || 100 : 100,
+              occurrencesPerCycle: frequency.occurrences,
+              unitsPerOccurrence: frequency.units,
+              readings: []
+            };
+          }
+          
+          // Store times for average calculation - convert to seconds directly
+          const timeInSeconds = Math.round(reading.time / 1000);
+          subprocessMap[subprocessName].times.push(timeInSeconds);
+          
+          // Keep reference to all readings for this subprocess
+          subprocessMap[subprocessName].readings.push(reading);
+          
+          // Update activity type if it was blank but now has a value
+          if (!subprocessMap[subprocessName].activityType && reading.activityType) {
+            subprocessMap[subprocessName].activityType = reading.activityType;
+          }
+          
+          // Always use the most recent production quantity and rating
+          if (reading.productionQty) {
+            subprocessMap[subprocessName].productionQty = reading.productionQty;
+          }
+        });
+        
+        // Calculate values for each subprocess
+        Object.keys(subprocessMap).forEach(subprocessName => {
+          const data = subprocessMap[subprocessName];
+          const times = data.times;
+          
+          // Calculate average time in seconds
+          const totalTimeSec = times.reduce((sum, time) => sum + time, 0);
+          const avgTimeSec = times.length > 0 ? totalTimeSec / times.length : 0;
+          
+          // UPDATED FORMULAS:
+          // 1. Cycle Time = Average Time / Production Quantity
+          const productionQty = Math.max(data.productionQty, 1); // Ensure we don't divide by zero
+          const cycleTime = avgTimeSec / productionQty;
+          
+          // 2. Basic Time = Cycle Time * (Rating / 100)
+          const basicTimeSec = cycleTime * (data.rating / 100);
+          
+          // 4. Effective Time = Basic Time * (Occurrences / Units)
+          const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
+          
+          // Format frequency as string for display
+          const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
+          
+          summaryData.push({
+            "Process": process.name,
+            "Subprocess": subprocessName,
+            "Activity Type": data.activityType,
+            "Average Time (sec)": avgTimeSec.toFixed(1),
+            "Rating (%)": data.rating,
+            "Basic Time (sec)": basicTimeSec.toFixed(1),
+            "Frequency": frequencyStr,
+            "Effective Time (sec)": effectiveTime.toFixed(1),
+            "Cycle Time (sec)": cycleTime.toFixed(1),
+            "Production Quantity": data.productionQty
+          });
+        });
+      }
+    });
+    
+    // If summary data exists, create and add the summary worksheet
+    if (summaryData.length > 0) {
+      const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+      
+      // Customize the column widths in summary sheet (for better readability)
+      const wsColWidth = [
+        {wch: 15}, // Process
+        {wch: 20}, // Subprocess
+        {wch: 12}, // Activity Type
+        {wch: 15}, // Average Time (sec)
+        {wch: 12}, // Rating (%)
+        {wch: 15}, // Basic Time (sec)
+        {wch: 12}, // Frequency
+        {wch: 15}, // Effective Time (sec)
+        {wch: 15}, // Cycle Time (sec)
+        {wch: 15}  // Production Quantity
+      ];
+      summaryWs['!cols'] = wsColWidth;
+      
+      // Add to workbook as "Process Summary"
+      XLSX.utils.book_append_sheet(wb, summaryWs, 'Process Summary');
+    }
+    
+    // Export the Excel file
+    try {
+      XLSX.writeFile(wb, filename + '.xlsx');
+      console.log('Export successful using standard XLSX.writeFile');
+      
+      // Only clear data if export was successful
+      clearAllReadingsData();
+      
+    } catch (standardError) {
+      console.error('Standard XLSX.writeFile failed:', standardError);
+      
+      // Try alternative method for browsers that don't support writeFile
+      try {
+        const wb_out = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+        
+        function s2ab(s) {
+          const buf = new ArrayBuffer(s.length);
+          const view = new Uint8Array(buf);
+          for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+          return buf;
+        }
+        
+        const blob = new Blob([s2ab(wb_out)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename + '.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          // Only clear data if export was successful
+          clearAllReadingsData();
+          
+        }, 100);
+        
+      } catch (alternativeError) {
+        console.error('Alternative export method failed:', alternativeError);
+        throw new Error('Excel export failed. Please try CSV export instead.');
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+    alert('There was an error exporting to Excel: ' + error.message);
+    
+    // Data is NOT cleared if there's an error
+    
+    // Offer CSV fallback
+    if (confirm('Would you like to try exporting as CSV instead?')) {
+      showModal('Export to CSV', `
+        <div>
+          <label for="export-filename" style="display: block; margin-bottom: 8px;">Enter filename (without extension):</label>
+          <input type="text" id="export-filename" value="time_motion_study" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+          <div style="display: flex; gap: 10px;">
+            <button onclick="confirmCSVExport()" class="btn-success" style="flex: 1;">Export as CSV</button>
+            <button onclick="closeModal()" class="btn-secondary" style="flex: 1;">Cancel</button>
+          </div>
+        </div>
+      `);
+      
+      // Focus the input field
+      setTimeout(() => {
+        const input = document.getElementById('export-filename');
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 100);
+    }
+  }
+}
   
   function exportToCSV(filename) {
-    // Confirm with user about data deletion
-    if (!confirm('After successfully exporting to CSV, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
-      return;
-    }
+  // Confirm with user about data deletion
+  if (!confirm('After successfully exporting to CSV, all recorded time data will be removed from the app. Are you sure you want to continue?')) {
+    return;
+  }
+  
+  try {
+    // Calculate frequencies for all processes
+    const allFrequencies = calculateFrequencies(state.processes);
     
-    try {
-      // Calculate frequencies for all processes
-      const allFrequencies = calculateFrequencies(state.processes);
-      
-      // Prepare data for CSV
-      const allReadings = [];
-      
-      state.processes.forEach(process => {
-        if (process.readings && process.readings.length > 0) {
-          process.readings.forEach(reading => {
+    // Prepare data for CSV
+    const allReadings = [];
+    
+    state.processes.forEach(process => {
+      if (process.readings && process.readings.length > 0) {
+        process.readings.forEach(reading => {
+          // Find the subprocess
+          const subprocess = process.subprocesses.find(sub => sub.name === reading.subprocess);
+          const rating = subprocess ? subprocess.rating || 100 : 100;
+          
+          // Get frequency for this subprocess
+          const processFrequencies = allFrequencies[process.name] || {};
+          const frequency = processFrequencies[reading.subprocess] || { occurrences: 1, units: 1 };
+          const frequencyStr = `${frequency.occurrences}/${frequency.units.toFixed(2)}`;
+          
+          // Convert time to seconds
+          const timeInSeconds = Math.round(reading.time / 1000);
+          
+          allReadings.push({
+            "Process": process.name,
+            "Subprocess": reading.subprocess,
+            "Activity Type": reading.activityType || "",
+            "Persons Required": reading.personCount || 1,
+            "Production Quantity": reading.productionQty || 0,
+            "Rating (%)": rating,
+            "Time (seconds)": timeInSeconds,
+            "Frequency": frequencyStr,
+            "Remarks": reading.remarks || "",
+            "Start Time": reading.formattedStartTime || "",
+            "End Time": reading.formattedEndTime || ""
+          });
+        });
+      }
+    });
+    
+    // Generate CSV content
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    // Add headers for detailed readings
+    csvContent += "DETAILED READINGS\r\n";
+    const headers = ["Process", "Subprocess", "Activity Type", "Persons Required", 
+                    "Production Quantity", "Rating (%)", "Time (seconds)", "Frequency", "Remarks", 
+                    "Start Time", "End Time"];
+    csvContent += headers.join(",") + "\r\n";
+    
+    // Add rows for detailed readings
+    allReadings.forEach(reading => {
+      const row = [
+        `"${reading["Process"]}"`, 
+        `"${reading["Subprocess"]}"`,
+        `"${reading["Activity Type"]}"`,
+        reading["Persons Required"],
+        reading["Production Quantity"],
+        reading["Rating (%)"],
+        reading["Time (seconds)"],
+        `"${reading["Frequency"]}"`,
+        `"${reading["Remarks"].replace(/"/g, '""')}"`, // Escape quotes in remarks
+        `"${reading["Start Time"]}"`,
+        `"${reading["End Time"]}"`
+      ];
+      csvContent += row.join(",") + "\r\n";
+    });
+    
+    // Add separator
+    csvContent += "\r\n\r\n";
+    
+    // Add summary section
+    csvContent += "PROCESS SUMMARY\r\n";
+    
+    // Summary headers
+    const summaryHeaders = [
+      "Process", "Subprocess", "Activity Type", "Average Time (sec)", 
+      "Rating (%)", "Basic Time (sec)", "Frequency", "Effective Time (sec)", 
+      "Cycle Time (sec)", "Production Quantity"
+    ];
+    csvContent += summaryHeaders.join(",") + "\r\n";
+    
+    // Generate summary data
+    state.processes.forEach(process => {
+      if (process.readings && process.readings.length > 0) {
+        // Get frequencies for this process
+        const processFrequencies = allFrequencies[process.name] || {};
+        
+        // Group readings by subprocess
+        const subprocessMap = {};
+        
+        process.readings.forEach(reading => {
+          const subprocessName = reading.subprocess;
+          
+          if (!subprocessMap[subprocessName]) {
             // Find the subprocess
-            const subprocess = process.subprocesses.find(sub => sub.name === reading.subprocess);
-            const rating = subprocess ? subprocess.rating || 100 : 100;
+            const subprocess = process.subprocesses.find(sub => sub.name === subprocessName);
             
             // Get frequency for this subprocess
-            const processFrequencies = allFrequencies[process.name] || {};
-            const frequency = processFrequencies[reading.subprocess] || { occurrences: 1, units: 1 };
-            const frequencyStr = `${frequency.occurrences}/${frequency.units.toFixed(2)}`;
+            const frequency = processFrequencies[subprocessName] || { occurrences: 1, units: 1 };
             
-            allReadings.push({
-              "Process": process.name,
-              "Subprocess": reading.subprocess,
-              "Activity Type": reading.activityType || "",
-              "Persons Required": reading.personCount || 1,
-              "Production Quantity": reading.productionQty || 0,
-              "Rating (%)": rating,
-              "Frequency": frequencyStr,
-              "Remarks": reading.remarks || "",
-              "Start Time": reading.formattedStartTime || "",
-              "End Time": reading.formattedEndTime || ""
-            });
-          });
-        }
-      });
-      
-      // Generate CSV content
-      let csvContent = "data:text/csv;charset=utf-8,";
-      
-      // Add headers for detailed readings
-      csvContent += "DETAILED READINGS\r\n";
-      const headers = ["Process", "Subprocess", "Activity Type", "Persons Required", 
-                      "Production Quantity", "Rating (%)", "Frequency", "Remarks", 
-                      "Start Time", "End Time"];
-      csvContent += headers.join(",") + "\r\n";
-      
-      // Add rows for detailed readings
-      allReadings.forEach(reading => {
-        const row = [
-          `"${reading["Process"]}"`, 
-          `"${reading["Subprocess"]}"`,
-          `"${reading["Activity Type"]}"`,
-          reading["Persons Required"],
-          reading["Production Quantity"],
-          reading["Rating (%)"],
-          `"${reading["Frequency"]}"`,
-          `"${reading["Remarks"].replace(/"/g, '""')}"`, // Escape quotes in remarks
-          `"${reading["Start Time"]}"`,
-          `"${reading["End Time"]}"`
-        ];
-        csvContent += row.join(",") + "\r\n";
-      });
-      
-      // Add separator
-      csvContent += "\r\n\r\n";
-      
-      // Add summary section
-      csvContent += "PROCESS SUMMARY\r\n";
-      
-      // Summary headers
-      const summaryHeaders = [
-        "Process", "Subprocess", "Activity Type", "Average Time (sec)", 
-        "Rating (%)", "Basic Time (sec)", "Frequency", "Effective Time (sec)", 
-        "Cycle Time (sec)", "Production Quantity"
-      ];
-      csvContent += summaryHeaders.join(",") + "\r\n";
-      
-      // Generate summary data
-      const summaryData = [];
-      
-      state.processes.forEach(process => {
-        if (process.readings && process.readings.length > 0) {
-          // Get frequencies for this process
-          const processFrequencies = allFrequencies[process.name] || {};
+            subprocessMap[subprocessName] = {
+              times: [],
+              activityType: reading.activityType || "",
+              productionQty: reading.productionQty || 1, // Default to 1 to avoid division by zero
+              rating: subprocess ? subprocess.rating || 100 : 100,
+              occurrencesPerCycle: frequency.occurrences,
+              unitsPerOccurrence: frequency.units,
+              readings: []
+            };
+          }
           
-          // Group readings by subprocess
-          const subprocessMap = {};
+          // Store times for average calculation in seconds
+          const timeInSeconds = Math.round(reading.time / 1000);
+          subprocessMap[subprocessName].times.push(timeInSeconds);
           
-          process.readings.forEach(reading => {
-            const subprocessName = reading.subprocess;
-            
-            if (!subprocessMap[subprocessName]) {
-              // Find the subprocess
-              const subprocess = process.subprocesses.find(sub => sub.name === subprocessName);
-              
-              // Get frequency for this subprocess
-              const frequency = processFrequencies[subprocessName] || { occurrences: 1, units: 1 };
-              
-              subprocessMap[subprocessName] = {
-                times: [],
-                activityType: reading.activityType || "",
-                productionQty: reading.productionQty || 0,
-                rating: subprocess ? subprocess.rating || 100 : 100,
-                occurrencesPerCycle: frequency.occurrences,
-                unitsPerOccurrence: frequency.units,
-                readings: []
-              };
-            }
-            
-            // Store times for average calculation
-            subprocessMap[subprocessName].times.push(reading.time || 0);
-            
-            // Keep reference to all readings for this subprocess
-            subprocessMap[subprocessName].readings.push(reading);
-            
-            // Update activity type if it was blank but now has a value
-            if (!subprocessMap[subprocessName].activityType && reading.activityType) {
-              subprocessMap[subprocessName].activityType = reading.activityType;
-            }
-          });
+          // Keep reference to all readings for this subprocess
+          subprocessMap[subprocessName].readings.push(reading);
           
-          // Calculate values for each subprocess
-          Object.keys(subprocessMap).forEach(subprocessName => {
-            const data = subprocessMap[subprocessName];
-            const times = data.times;
-            
-            // Calculate average time in seconds
-            const totalTimeMs = times.reduce((sum, time) => sum + time, 0);
-            const avgTimeMs = totalTimeMs / times.length;
-            const avgTimeSec = avgTimeMs / 1000;
-            
-            // FIX: Correct order of calculations
-            const cycleTime = avgTimeSec / data.unitsPerOccurrence;
-            const basicTimeSec = cycleTime * (data.rating / 100);
-            const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
-            
-            // Format frequency as string for display
-            const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
-            
-            // Add to summary data
-            const summaryRow = [
-              `"${process.name}"`,
-              `"${subprocessName}"`,
-              `"${data.activityType}"`,
-              avgTimeSec.toFixed(1),
-              data.rating,
-              basicTimeSec.toFixed(1),
-              `"${frequencyStr}"`,
-              effectiveTime.toFixed(1),
-              cycleTime.toFixed(1),
-              data.productionQty
-            ];
-            
-            csvContent += summaryRow.join(",") + "\r\n";
-          });
-        }
-      });
-      
-      try {
-        // Create a download link
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `${filename}.csv`);
-        document.body.appendChild(link); // Required for FF
+          // Update activity type if it was blank but now has a value
+          if (!subprocessMap[subprocessName].activityType && reading.activityType) {
+            subprocessMap[subprocessName].activityType = reading.activityType;
+          }
+          
+          // Always use the most recent production quantity
+          if (reading.productionQty) {
+            subprocessMap[subprocessName].productionQty = reading.productionQty;
+          }
+        });
         
-        // Trigger download
-        link.click();
-        
-        // Clean up
-        document.body.removeChild(link);
-        
-        // Clear data ONLY after successful export
-        clearAllReadingsData();
-        
-        // Show success notification
-        showNotification("CSV export complete", 3000);
-        
-      } catch (downloadError) {
-        console.error('Error creating download link:', downloadError);
-        throw new Error('Could not create the download link');
+        // Calculate values for each subprocess
+        Object.keys(subprocessMap).forEach(subprocessName => {
+          const data = subprocessMap[subprocessName];
+          const times = data.times;
+          
+          // Calculate average time in seconds
+          const totalTimeSec = times.reduce((sum, time) => sum + time, 0);
+          const avgTimeSec = times.length > 0 ? totalTimeSec / times.length : 0;
+          
+          // UPDATED FORMULAS:
+          // 1. Cycle Time = Average Time / Production Quantity
+          const productionQty = Math.max(data.productionQty, 1); // Ensure we don't divide by zero
+          const cycleTime = avgTimeSec / productionQty;
+          
+          // 2. Basic Time = Cycle Time * (Rating / 100)
+          const basicTimeSec = cycleTime * (data.rating / 100);
+          
+          // 3. Effective Time = Basic Time * (Occurrences / Units)
+          const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
+          
+          // Format frequency as string for display
+          const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
+          
+          // Add to CSV content
+          const summaryRow = [
+            `"${process.name}"`,
+            `"${subprocessName}"`,
+            `"${data.activityType}"`,
+            avgTimeSec.toFixed(1),
+            data.rating,
+            basicTimeSec.toFixed(1),
+            `"${frequencyStr}"`,
+            effectiveTime.toFixed(1),
+            cycleTime.toFixed(1),
+            data.productionQty
+          ];
+          
+          csvContent += summaryRow.join(",") + "\r\n";
+        });
       }
+    });
+    
+    try {
+      // Create a download link
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `${filename}.csv`);
+      document.body.appendChild(link); // Required for FF
       
-    } catch (error) {
-      console.error('Error exporting to CSV:', error);
-      alert('There was an error exporting to CSV: ' + error.message);
+      // Trigger download
+      link.click();
       
-      // Do NOT clear data in case of error
+      // Clean up
+      document.body.removeChild(link);
+      
+      // Clear data ONLY after successful export
+      clearAllReadingsData();
+      
+      // Show success notification
+      showNotification("CSV export complete", 3000);
+      
+    } catch (downloadError) {
+      console.error('Error creating download link:', downloadError);
+      throw new Error('Could not create the download link');
     }
+    
+  } catch (error) {
+    console.error('Error exporting to CSV:', error);
+    alert('There was an error exporting to CSV: ' + error.message);
+    
+    // Do NOT clear data in case of error
   }
+}
   // Clear all readings data after export
   // Fix the clearAllReadingsData function
  // Improved clearAllReadingsData function
