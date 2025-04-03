@@ -977,9 +977,9 @@ const state = {
             const avgTimeSec = avgTimeMs / 1000;
             
             // FIX: Correct order of calculations
-            const cycleTime = avgTimeSec / data.productionQty;
+            const cycleTime = avgTimeSec / data.unitsPerOccurrence;
             const basicTimeSec = cycleTime * (data.rating / 100);
-            const effectiveTime = basicTimeSec * frequencyStr;
+            const effectiveTime = basicTimeSec * (data.occurrencesPerCycle / data.unitsPerOccurrence);
             
             // Format frequency as string for display
             const frequencyStr = `${data.occurrencesPerCycle}/${data.unitsPerOccurrence.toFixed(2)}`;
