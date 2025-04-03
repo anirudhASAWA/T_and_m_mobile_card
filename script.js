@@ -905,7 +905,7 @@ function calculateSummaryData(processes) {
         
         // Store times for average calculation
         // Convert to seconds directly by dividing by 1000 and rounding
-        const timeInSeconds = Math.round(reading.time / 1000);
+        const timeInSeconds = Math.floor(reading.time / 1000);
         subprocessMap[subprocessName].times.push(timeInSeconds);
         
         // Keep reference to all readings for this subprocess
@@ -995,7 +995,7 @@ function calculateSummaryData(processes) {
           const frequency = processFrequencies[reading.subprocess] || { occurrences: 1, units: 1 };
           
           // Convert time to seconds for display
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           const formattedTimeInSeconds = `${timeInSeconds}s`;
           
           allReadings.push({
@@ -1053,7 +1053,7 @@ function calculateSummaryData(processes) {
           }
           
           // Store times for average calculation - convert to seconds directly
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           subprocessMap[subprocessName].times.push(timeInSeconds);
           
           // Keep reference to all readings for this subprocess
@@ -1233,7 +1233,7 @@ function calculateSummaryData(processes) {
           const frequencyStr = `${frequency.occurrences}/${frequency.units.toFixed(2)}`;
           
           // Convert time to seconds
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           
           allReadings.push({
             "Process": process.name,
@@ -1325,7 +1325,7 @@ function calculateSummaryData(processes) {
           }
           
           // Store times for average calculation in seconds
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           subprocessMap[subprocessName].times.push(timeInSeconds);
           
           // Keep reference to all readings for this subprocess
