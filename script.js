@@ -33,12 +33,12 @@ function debounce(func, wait) {
       if (process.subprocesses && process.subprocesses.length > 0) {
         process.subprocesses.forEach((subprocess, subprocessIndex) => {
           // Get references to the form elements that might exist in either view
-          let activityTypeElement, remarksElement, personCountElement, productionQtyElement, ratingElement;
+          let activityTypeElement, remarksElement,  productionQtyElement, ratingElement;
           
           // Try to find the elements in current view (mobile or desktop)
           activityTypeElement = document.getElementById(`activity-type-${processIndex}-${subprocessIndex}`);
           remarksElement = document.getElementById(`remarks-${processIndex}-${subprocessIndex}`);
-          personCountElement = document.getElementById(`person-count-${processIndex}-${subprocessIndex}`);
+          
           productionQtyElement = document.getElementById(`production-qty-${processIndex}-${subprocessIndex}`);
           ratingElement = document.getElementById(`rating-${processIndex}-${subprocessIndex}`);
           
@@ -49,9 +49,7 @@ function debounce(func, wait) {
           if (remarksElement) {
             subprocess.remarks = remarksElement.value;
           }
-          if (personCountElement) {
-            subprocess.personCount = parseInt(personCountElement.value) || 1;
-          }
+          
           if (productionQtyElement) {
             subprocess.productionQty = parseInt(productionQtyElement.value) || 0;
           }
@@ -109,9 +107,9 @@ const state = {
     // Ensure time is a positive value
     time = Math.abs(time);
     
-    const hours = Math.round(time / 3600000);
-    const minutes = Math.round((time % 3600000) / 60000);
-    const seconds = Math.round((time % 60000) / 1000);
+    const hours = Math.floor(time / 3600000);
+    const minutes = Math.floor((time % 3600000) / 60000);
+    const seconds = Math.floor((time % 60000) / 1000);
     
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
@@ -257,8 +255,7 @@ const state = {
       formattedTime: '00:00:00',
       completed: false,
       activityType: '',   // VA or NVA
-      remarks: '',        // Remarks
-      personCount: 1,     // Default number of persons required
+      remarks: '',        // Remarks    
       productionQty: 0    // NEW: Production quantity field
     });
     
@@ -356,18 +353,18 @@ const state = {
     if (process.subprocesses && process.subprocesses.length > 0) {
       process.subprocesses.forEach((subprocess, subprocessIndex) => {
         // Get references to the input elements
-        let activityTypeElement, remarksElement, personCountElement, productionQtyElement, ratingElement;
+        let activityTypeElement, remarksElement, productionQtyElement, ratingElement;
         
         if (isMobile) {
           activityTypeElement = document.getElementById(`activity-type-${processIndex}-${subprocessIndex}`);
           remarksElement = document.getElementById(`remarks-${processIndex}-${subprocessIndex}`);
-          personCountElement = document.getElementById(`person-count-${processIndex}-${subprocessIndex}`);
+          
           productionQtyElement = document.getElementById(`production-qty-${processIndex}-${subprocessIndex}`);
           ratingElement = document.getElementById(`rating-${processIndex}-${subprocessIndex}`);
         } else {
           activityTypeElement = document.getElementById(`activity-type-${processIndex}-${subprocessIndex}`);
           remarksElement = document.getElementById(`remarks-${processIndex}-${subprocessIndex}`);
-          personCountElement = document.getElementById(`person-count-${processIndex}-${subprocessIndex}`);
+          
           productionQtyElement = document.getElementById(`production-qty-${processIndex}-${subprocessIndex}`);
           ratingElement = document.getElementById(`rating-${processIndex}-${subprocessIndex}`);
         }
@@ -379,9 +376,7 @@ const state = {
         if (remarksElement) {
           subprocess.remarks = remarksElement.value;
         }
-        if (personCountElement) {
-          subprocess.personCount = parseInt(personCountElement.value) || 1;
-        }
+       
         if (productionQtyElement) {
           subprocess.productionQty = parseInt(productionQtyElement.value) || 0;
         }
@@ -479,18 +474,18 @@ const state = {
     if (process.subprocesses && process.subprocesses.length > 0) {
       process.subprocesses.forEach((subprocess, subprocessIndex) => {
         // Get references to the input elements after rendering
-        let activityTypeElement, remarksElement, personCountElement, productionQtyElement, ratingElement;
+        let activityTypeElement, remarksElement,  productionQtyElement, ratingElement;
         
         if (isMobile) {
           activityTypeElement = document.getElementById(`activity-type-${processIndex}-${subprocessIndex}`);
           remarksElement = document.getElementById(`remarks-${processIndex}-${subprocessIndex}`);
-          personCountElement = document.getElementById(`person-count-${processIndex}-${subprocessIndex}`);
+         
           productionQtyElement = document.getElementById(`production-qty-${processIndex}-${subprocessIndex}`);
           ratingElement = document.getElementById(`rating-${processIndex}-${subprocessIndex}`);
         } else {
           activityTypeElement = document.getElementById(`activity-type-${processIndex}-${subprocessIndex}`);
           remarksElement = document.getElementById(`remarks-${processIndex}-${subprocessIndex}`);
-          personCountElement = document.getElementById(`person-count-${processIndex}-${subprocessIndex}`);
+          
           productionQtyElement = document.getElementById(`production-qty-${processIndex}-${subprocessIndex}`);
           ratingElement = document.getElementById(`rating-${processIndex}-${subprocessIndex}`);
         }
@@ -502,9 +497,7 @@ const state = {
         if (remarksElement) {
           remarksElement.value = subprocess.remarks || '';
         }
-        if (personCountElement) {
-          personCountElement.value = subprocess.personCount || 1;
-        }
+       
         if (productionQtyElement) {
           productionQtyElement.value = subprocess.productionQty || 0;
         }
@@ -550,37 +543,37 @@ const state = {
     if (!process.timerRunning || !state.timers[process.name]) return;
     
     // Get additional data
-    let activityTypeElement, remarksElement, personCountElement, productionQtyElement, ratingElement;
+    let activityTypeElement, remarksElement, productionQtyElement, ratingElement;
     
     if (isMobile) {
       activityTypeElement = document.getElementById(`activity-type-${processIndex}-${subprocessIndex}`);
       remarksElement = document.getElementById(`remarks-${processIndex}-${subprocessIndex}`);
-      personCountElement = document.getElementById(`person-count-${processIndex}-${subprocessIndex}`);
+      
       productionQtyElement = document.getElementById(`production-qty-${processIndex}-${subprocessIndex}`);
       ratingElement = document.getElementById(`rating-${processIndex}-${subprocessIndex}`);
     } else {
       activityTypeElement = document.getElementById(`activity-type-${processIndex}-${subprocessIndex}`);
       remarksElement = document.getElementById(`remarks-${processIndex}-${subprocessIndex}`);
-      personCountElement = document.getElementById(`person-count-${processIndex}-${subprocessIndex}`);
+      
       productionQtyElement = document.getElementById(`production-qty-${processIndex}-${subprocessIndex}`);
       ratingElement = document.getElementById(`rating-${processIndex}-${subprocessIndex}`);
     }
     
-    if (!activityTypeElement || !remarksElement || !personCountElement || !productionQtyElement || !ratingElement) {
+    if (!activityTypeElement || !remarksElement  || !productionQtyElement || !ratingElement) {
       console.error("Could not find form elements for subprocess", processIndex, subprocessIndex);
       return;
     }
     
     const activityType = activityTypeElement.value;
     const remarks = remarksElement.value;
-    const personCount = parseInt(personCountElement.value) || 1;
+    
     const productionQty = parseInt(productionQtyElement.value) || 0;
     const rating = parseInt(ratingElement.value) || 100;
     
     // Save the additional data to the subprocess
     subprocess.activityType = activityType;
     subprocess.remarks = remarks;
-    subprocess.personCount = personCount;
+    
     subprocess.productionQty = productionQty;
     subprocess.rating = rating;  // Store rating at subprocess level
     
@@ -600,7 +593,7 @@ const state = {
       timestamp: new Date().toISOString(),
       activityType: activityType,
       remarks: remarks,
-      personCount: personCount,
+      
       productionQty: productionQty,
       // We don't need to store rating at reading level anymore as we'll use subprocess.rating
       startTime: startTime.toISOString(),
@@ -905,7 +898,7 @@ function calculateSummaryData(processes) {
         
         // Store times for average calculation
         // Convert to seconds directly by dividing by 1000 and rounding
-        const timeInSeconds = Math.round(reading.time / 1000);
+        const timeInSeconds = Math.floor(reading.time / 1000);
         subprocessMap[subprocessName].times.push(timeInSeconds);
         
         // Keep reference to all readings for this subprocess
@@ -945,7 +938,7 @@ function calculateSummaryData(processes) {
         
         summaryData.push({
           "Process": process.name,
-          "Subprocess": subprocessName,
+          "Activity": subprocessName,
           "Activity Type": data.activityType,
           "Average Time (sec)": avgTimeSec.toFixed(1),
           "Rating (%)": data.rating,
@@ -995,14 +988,14 @@ function calculateSummaryData(processes) {
           const frequency = processFrequencies[reading.subprocess] || { occurrences: 1, units: 1 };
           
           // Convert time to seconds for display
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           const formattedTimeInSeconds = `${timeInSeconds}s`;
           
           allReadings.push({
             "Process": process.name,
             "Subprocess": reading.subprocess,
             "Activity Type": reading.activityType || "",
-            "Persons Required": reading.personCount || 1,
+            
             "Production Quantity": reading.productionQty || 0,
             "Rating (%)": rating,
             "Time (seconds)": timeInSeconds,
@@ -1053,7 +1046,7 @@ function calculateSummaryData(processes) {
           }
           
           // Store times for average calculation - convert to seconds directly
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           subprocessMap[subprocessName].times.push(timeInSeconds);
           
           // Keep reference to all readings for this subprocess
@@ -1095,7 +1088,7 @@ function calculateSummaryData(processes) {
           
           summaryData.push({
             "Process": process.name,
-            "Subprocess": subprocessName,
+            "Activity": subprocessName,
             "Activity Type": data.activityType,
             "Average Time (sec)": avgTimeSec.toFixed(1),
             "Rating (%)": data.rating,
@@ -1108,6 +1101,8 @@ function calculateSummaryData(processes) {
         });
       }
     });
+    
+
     
     // If summary data exists, create and add the summary worksheet
     if (summaryData.length > 0) {
@@ -1233,13 +1228,13 @@ function calculateSummaryData(processes) {
           const frequencyStr = `${frequency.occurrences}/${frequency.units.toFixed(2)}`;
           
           // Convert time to seconds
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           
           allReadings.push({
             "Process": process.name,
             "Subprocess": reading.subprocess,
             "Activity Type": reading.activityType || "",
-            "Persons Required": reading.personCount || 1,
+           
             "Production Quantity": reading.productionQty || 0,
             "Rating (%)": rating,
             "Time (seconds)": timeInSeconds,
@@ -1257,7 +1252,7 @@ function calculateSummaryData(processes) {
     
     // Add headers for detailed readings
     csvContent += "DETAILED READINGS\r\n";
-    const headers = ["Process", "Subprocess", "Activity Type", "Persons Required", 
+    const headers = ["Process", "Subprocess", "Activity Type",  
                     "Production Quantity", "Rating (%)", "Time (seconds)", "Frequency", "Remarks", 
                     "Start Time", "End Time"];
     csvContent += headers.join(",") + "\r\n";
@@ -1268,7 +1263,6 @@ function calculateSummaryData(processes) {
         `"${reading["Process"]}"`, 
         `"${reading["Subprocess"]}"`,
         `"${reading["Activity Type"]}"`,
-        reading["Persons Required"],
         reading["Production Quantity"],
         reading["Rating (%)"],
         reading["Time (seconds)"],
@@ -1325,7 +1319,7 @@ function calculateSummaryData(processes) {
           }
           
           // Store times for average calculation in seconds
-          const timeInSeconds = Math.round(reading.time / 1000);
+          const timeInSeconds = Math.floor(reading.time / 1000);
           subprocessMap[subprocessName].times.push(timeInSeconds);
           
           // Keep reference to all readings for this subprocess
@@ -1529,7 +1523,7 @@ function clearAllReadingsData() {
         </td>
         <td colspan="2">
           <div class="subprocess-input">
-            <input type="text" id="subprocess-input-${processIndex}" placeholder="Enter subprocess name">
+            <input type="text" id="subprocess-input-${processIndex}" placeholder="Enter Activity name">
             <button class="btn-primary" onclick="addSubprocess(${processIndex})">Add</button>
           </div>
         </td>
@@ -1577,7 +1571,7 @@ function clearAllReadingsData() {
           <td>
             <div class="subprocess-details">
               <div class="subprocess-name-container">
-                <div class="subprocess-name">${subprocess.name}</div>
+                <div class="Activity-name">${subprocess.name}</div>
                 ${subprocess.formattedTime !== '00:00:00' ? 
                   `<span class="subprocess-time">${subprocess.formattedTime}</span>` : ''}
               </div>
@@ -1602,11 +1596,6 @@ function clearAllReadingsData() {
                   <label for="production-qty-${processIndex}-${subprocessIndex}">Production:</label>
                   <input type="number" id="production-qty-${processIndex}-${subprocessIndex}" class="production-qty-input" 
                     value="${subprocess.productionQty || 0}" min="0">
-                </div>
-                <div class="input-group">
-                  <label for="person-count-${processIndex}-${subprocessIndex}">Persons:</label>
-                  <input type="number" id="person-count-${processIndex}-${subprocessIndex}" class="person-count-input" 
-                    value="${subprocess.personCount || 1}" min="1" max="100">
                 </div>
                 <div class="input-group">
                   <label for="rating-${processIndex}-${subprocessIndex}">Rating (%):</label>
@@ -1655,7 +1644,6 @@ function clearAllReadingsData() {
             <td>${reading.subprocess}</td>
             <td>${reading.formattedTime}</td>
             <td>${reading.activityType || ""}</td>
-            <td>${reading.personCount || 1}</td>
             <td>${reading.remarks || ""}</td>
             <td>${rating}%</td>
             <td>${reading.formattedStartTime || ""}</td>
@@ -1784,7 +1772,7 @@ function clearAllReadingsData() {
         ${process.timerRunning ? 'Stop' : 'Start'}
       </button>
       <button class="btn-secondary" onclick="resetTimer(${processIndex})" style="height: 34px;">Reset</button>
-      <button class="btn-primary" onclick="showAddSubprocessModal(${processIndex})" style="height: 34px;">+ Subprocess</button>
+      <button class="btn-primary" onclick="showAddSubprocessModal(${processIndex})" style="height: 34px;">+ Activity</button>
     `;
     card.appendChild(controls);
     
@@ -1891,8 +1879,7 @@ function clearAllReadingsData() {
       formattedTime: '00:00:00',
       completed: false,
       activityType: '',   // VA or NVA
-      remarks: '',        // Remarks
-      personCount: 1,     // Default number of persons required
+      remarks: '',        // Remarks    // Default number of persons required
       productionQty: 0,   // Production quantity field
       rating: 100         // NEW: Default rating 100%
     });
@@ -1969,14 +1956,7 @@ function clearAllReadingsData() {
       </select>
     `;
     
-    // Column 2: Persons
-    const column2 = document.createElement('div');
-    column2.style.flex = '1';
-    column2.innerHTML = `
-      <label for="person-count-${processIndex}-${subprocessIndex}" style="display: block; font-size: 12px; margin-bottom: 2px;">Persons</label>
-      <input type="number" id="person-count-${processIndex}-${subprocessIndex}" class="person-count-input" 
-        value="${subprocess.personCount || 1}" min="1" max="100" style="width: 100%; height: 32px; padding: 2px 5px; font-size: 13px;">
-    `;
+  
     
     inputRow.appendChild(column1);
     inputRow.appendChild(column2);
@@ -2076,11 +2056,7 @@ function clearAllReadingsData() {
         </select>
       </div>
       
-      <div class="input-group">
-        <label for="person-count-${processIndex}-${subprocessIndex}">Persons</label>
-        <input type="number" id="person-count-${processIndex}-${subprocessIndex}" class="person-count-input" 
-          value="${subprocess.personCount || 1}" min="1" max="100">
-      </div>
+
   
       <div class="input-group">
         <label for="production-qty-${processIndex}-${subprocessIndex}">Production</label>
@@ -2168,11 +2144,7 @@ function clearAllReadingsData() {
             <strong style="font-size: 14px;">${reading.process} - ${reading.subprocess}</strong>
             <span style="color: #10b981; font-weight: bold; font-size: 14px;">${reading.formattedTime}</span>
           </div>
-          <div style="font-size: 13px;">
-            <div><strong>Activity:</strong> ${reading.activityType || "—"} | <strong>Persons:</strong> ${reading.personCount} | <strong>Rating:</strong> ${reading.rating}%</div>
-            <div><strong>Remarks:</strong> ${reading.remarks || "—"}</div>
-            <div style="color: #666; font-size: 12px; margin-top: 3px;">${new Date(reading.timestamp).toLocaleString()}</div>
-          </div>
+
           <div style="text-align: right; margin-top: 3px;">
             <button class="btn-danger btn-small" onclick="deleteReading(${reading.processIndex}, ${reading.readingIndex})" 
               style="height: 30px; font-size: 12px; padding: 0 8px;">
@@ -2216,10 +2188,10 @@ function clearAllReadingsData() {
   
   // Show add subprocess modal
   function showAddSubprocessModal(processIndex) {
-  showModal('Add Subprocess', `
+  showModal('Add Activity', `
     <div>
       <input type="text" id="mobile-subprocess-name" placeholder="Enter subprocess name" style="width: 100%; padding: 10px; margin-bottom: 15px;">
-      <button onclick="addSubprocessFromModal(${processIndex})" class="btn-primary" style="width: 100%;">Add Subprocess</button>
+      <button onclick="addSubprocessFromModal(${processIndex})" class="btn-primary" style="width: 100%;">Add Activity</button>
     </div>
   `);
   
@@ -2299,8 +2271,7 @@ function clearAllReadingsData() {
     formattedTime: '00:00:00',
     completed: false,
     activityType: '', // VA or NVA
-    remarks: '',      // Remarks
-    personCount: 1    // Default number of persons required
+    remarks: '',      // Remarks   // Default number of persons required
   });
   
   closeModal();
@@ -2365,6 +2336,110 @@ function clearAllReadingsData() {
       }
     }
   }
+
+
+  function calculateStorageUsage() {
+    try {
+      // Get total size available (typically 5MB or 10MB depending on browser)
+      const totalSize = 5 * 1024 * 1024; // 5MB in bytes
+      
+      // Get current size used
+      let usedSize = 0;
+      for (const key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          usedSize += localStorage[key].length * 2; // UTF-16 uses 2 bytes per character
+        }
+      }
+      
+      // Calculate percentage used
+      const percentUsed = (usedSize / totalSize) * 100;
+      
+      return {
+        used: usedSize,
+        total: totalSize,
+        percent: percentUsed,
+        usedMB: (usedSize / (1024 * 1024)).toFixed(2),
+        totalMB: (totalSize / (1024 * 1024)).toFixed(2)
+      };
+    } catch (e) {
+      console.error('Error calculating storage usage:', e);
+      return { used: 0, total: 5 * 1024 * 1024, percent: 0, usedMB: '0.00', totalMB: '5.00' };
+    }
+  }
+  
+  function updateStorageBar() {
+    const usage = calculateStorageUsage();
+    
+    // Create or get the storage bar container
+    let storageBar = document.getElementById('storage-usage-bar');
+    
+    if (!storageBar) {
+      // Create the container if it doesn't exist
+      storageBar = document.createElement('div');
+      storageBar.id = 'storage-usage-bar';
+      storageBar.className = 'storage-bar-container';
+      
+      // Create inner elements
+      storageBar.innerHTML = `
+        <div class="storage-bar">
+          <div class="storage-bar-fill"></div>
+        </div>
+        <div class="storage-text">
+          <span class="storage-used">0MB</span> / <span class="storage-total">5MB</span>
+        </div>
+      `;
+      
+      // Add to page - position it at the top of the page
+      document.body.insertBefore(storageBar, document.body.firstChild);
+    }
+    
+    // Update the bar fill
+    const barFill = storageBar.querySelector('.storage-bar-fill');
+    barFill.style.width = `${Math.min(usage.percent, 100)}%`;
+    
+    // Set color based on usage
+    if (usage.percent < 70) {
+      barFill.style.backgroundColor = '#10b981'; // Green
+    } else if (usage.percent < 90) {
+      barFill.style.backgroundColor = '#f59e0b'; // Yellow/orange
+    } else {
+      barFill.style.backgroundColor = '#ef4444'; // Red
+    }
+    
+    // Update text
+    storageBar.querySelector('.storage-used').textContent = `${usage.usedMB}MB`;
+    storageBar.querySelector('.storage-total').textContent = `${usage.totalMB}MB`;
+    
+    // Show warning if near limit
+    if (usage.percent > 85) {
+      showNotification('Storage almost full! Consider exporting data.', 5000);
+    }
+  }
+
+  function setupStorageMonitoring() {
+    // Update on page load
+    updateStorageBar();
+    
+    // Update after any save operation
+    const originalSaveToLocalStorage = saveToLocalStorage;
+    saveToLocalStorage = function() {
+      originalSaveToLocalStorage.apply(this, arguments);
+      updateStorageBar();
+    };
+    
+    // Update periodically
+    setInterval(updateStorageBar, 30000); // Every 30 seconds
+  }
+  
+  // Add this to your initialization code
+  document.addEventListener('DOMContentLoaded', function() {
+    // Existing initialization code...
+    
+    // Setup storage monitoring
+    setupStorageMonitoring();
+  });
+
+
   // Show modal
   function showModal(title, content) {
   // Create or get modal
